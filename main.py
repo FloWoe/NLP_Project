@@ -11,12 +11,14 @@ Languages = {'afrikaans':'af','albanian':'sq','amharic':'am','arabic':'ar','arme
 
 translator = google_translator()
 st.title("Language Translator:balloon:")
-st.write('''
-[![Star](https://img.shields.io/github/stars/HarisankarSNair/LanguageTranslator.svg?logo=github&style=social)](https://gitHub.com/HarisankarSNair/LanguageTranslator)
-&nbsp [![Streamlit](https://img.shields.io/badge/Made%20with%20-Streamlit-red)](https://streamlit.io/)
-''')
 
-text = st.text_area("Enter text:",height=None,max_chars=None,key=None,help="Enter your text here")
+col1, col2 = st.columns(2)
+
+with col1:
+    text = st.text_area("Enter text:",height=None,max_chars=None,key=None,help="Enter your text here")
+
+with col2:
+    text2 = st.text_area("Translation:",height=None,max_chars=None,key=None,help="Enter your text here")
 
 option1 = st.selectbox('Input language',
                       ('english', 'afrikaans', 'albanian', 'amharic', 'arabic', 'armenian', 'azerbaijani', 'basque', 'belarusian', 'bengali', 'bosnian', 'bulgarian', 'catalan', 'cebuano', 'chichewa', 'chinese (simplified)', 'chinese (traditional)', 'corsican', 'croatian', 'czech', 'danish', 'dutch',  'esperanto', 'estonian', 'filipino', 'finnish', 'french', 'frisian', 'galician', 'georgian', 'german', 'greek', 'gujarati', 'haitian creole', 'hausa', 'hawaiian', 'hebrew', 'hindi', 'hmong', 'hungarian', 'icelandic', 'igbo', 'indonesian', 'irish', 'italian', 'japanese', 'javanese', 'kannada', 'kazakh', 'khmer', 'korean', 'kurdish (kurmanji)', 'kyrgyz', 'lao', 'latin', 'latvian', 'lithuanian', 'luxembourgish', 'macedonian', 'malagasy', 'malay', 'malayalam', 'maltese', 'maori', 'marathi', 'mongolian', 'myanmar (burmese)', 'nepali', 'norwegian', 'odia', 'pashto', 'persian', 'polish', 'portuguese', 'punjabi', 'romanian', 'russian', 'samoan', 'scots gaelic', 'serbian', 'sesotho', 'shona', 'sindhi', 'sinhala', 'slovak', 'slovenian', 'somali', 'spanish', 'sundanese', 'swahili', 'swedish', 'tajik', 'tamil', 'telugu', 'thai', 'turkish', 'turkmen', 'ukrainian', 'urdu', 'uyghur', 'uzbek', 'vietnamese', 'welsh', 'xhosa', 'yiddish', 'yoruba', 'zulu'))
