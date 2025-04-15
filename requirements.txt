@@ -1,0 +1,4 @@
+google-trans-new
+streamlit
+gtts
+
