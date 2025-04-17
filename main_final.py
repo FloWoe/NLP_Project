@@ -22,6 +22,6 @@ def main():
         print("❌ Fehler:")
         print(e)
 
-# === Diese Zeile ist wichtig!
+
 if __name__ == "__main__":
     main()
