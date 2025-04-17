@@ -1,4 +1,4 @@
-# NLP_Project
+# NLP Project
 
 ## Beschreibung des Projektes
 # 📚 Vokabeltrainer mit Textmarkierung
