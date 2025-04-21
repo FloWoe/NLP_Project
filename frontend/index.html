@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <title>Übersetzer</title>
+    <style>
+        body {
+            font-family: sans-serif;
+            background-color: #f5f6fa;
+            margin: 0;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: auto;
+        }
+
+        h1 {
+            text-align: center;
+            color: #003f99;
+        }
+
+        .lang-select {
+            margin-bottom: 15px;
+        }
+
+        .translator-boxes {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+
+        .text-box {
+            width: 100%;
+            height: 200px;
+            padding: 10px;
+            font-size: 16px;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            background-color: #fff;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            overflow-y: auto;
+            white-space: pre-wrap;
+        }
+
+        .highlight {
+            background-color: yellow;
+            font-weight: bold;
+        }
+
+        .info-icon {
+            cursor: pointer;
+            font-size: 14px;
+            color: #0052cc;
+            margin-left: 4px;
+        }
+
+        #explanationBox {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 8px;
+            background: #fff;
+            border: 1px solid #ccc;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        button {
+            padding: 10px 20px;
+            font-size: 16px;
+            background-color: #0052cc;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            display: block;
+            margin: auto;
+        }
+
+        button:hover {
+            background-color: #003f99;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🌍 Übersetzer</h1>
+
+        <div class="lang-select">
+            <label for="targetLang">Zielsprache auswählen:</label>
+            <select id="targetLang">
+                <option value="en">Englisch</option>
+                <option value="fr">Französisch</option>
+                <option value="es">Spanisch</option>
+                <option value="ja">Japanisch</option>
+                <option value="de">Deutsch</option>
+            </select>
+        </div>
+
+        <div class="translator-boxes">
+            <div id="inputText" contenteditable="true" class="text-box" onmouseup="handleSelection('lang1')"></div>
+            <div id="outputText" contenteditable="false" class="text-box" onmouseup="handleSelection('lang2')"></div>
+        </div>
+
+        <button onclick="submitTranslation()">🔁 Übersetzen</button>
+
+        <div id="explanationBox" style="display: none;"></div>
+    </div>
+
+    <script>
+        let lastInputText = "";
+        let lastOutputText = "";
+
+        function submitTranslation() {
+            const input = document.getElementById("inputText").innerText.trim();
+            const targetLang = document.getElementById("targetLang").value;
+
+            if (!input || !targetLang) return;
+
+            fetch("http://127.0.0.1:5000/translate", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ text: input, target_lang: targetLang })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.translated) {
+                    lastInputText = input;
+                    lastOutputText = data.translated;
+                    document.getElementById("outputText").innerText = data.translated;
+                }
+            })
+            .catch(err => console.error("Fehler:", err));
+        }
+
+        function clearHighlights() {
+            ["inputText", "outputText"].forEach(id => {
+                const el = document.getElementById(id);
+                el.innerHTML = el.innerText;
+            });
+            document.getElementById("explanationBox").style.display = "none";
+            document.getElementById("explanationBox").innerHTML = "";
+        }
+
+        function highlightWord(containerId, word) {
+            const el = document.getElementById(containerId);
+            const text = el.innerText;
+            const escaped = word.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+            const regex = new RegExp(`\\b(${escaped})\\b`, 'i');
+            const newHTML = text.replace(regex, `<span class="highlight">$1</span><span class="info-icon" onclick="fetchExplanation('$1')"> ℹ️</span>`);
+            el.innerHTML = newHTML;
+        }
+
+        function handleSelection(lang) {
+            const sel = window.getSelection();
+            const word = sel.toString().trim();
+            if (!word || word.includes(" ")) return;
+
+            const payload = {
+                sentence1: lastInputText,
+                sentence2: lastOutputText,
+                selectedWord: word,
+                selectedFrom: lang
+            };
+
+            fetch("http://127.0.0.1:5000/match-word", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(payload)
+            })
+            .then(res => res.json())
+            .then(data => {
+                const matched = data.matchedWord;
+                if (!matched || matched.includes("Fehler")) return;
+
+                clearHighlights();
+
+                if (lang === "lang1") {
+                    highlightWord("inputText", word);
+                    highlightWord("outputText", matched);
+                } else {
+                    highlightWord("outputText", word);
+                    highlightWord("inputText", matched);
+                }
+            })
+            .catch(err => console.error("Fehler beim Matching:", err));
+        }
+
+        function fetchExplanation(word) {
+            const sentence = document.getElementById("outputText").innerText;
+
+            fetch("http://127.0.0.1:5000/explain-word", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ sentence: sentence, word: word })
+            })
+            .then(res => res.json())
+            .then(data => {
+                const box = document.getElementById("explanationBox");
+                box.innerHTML = `<h3>Erklärung zu: ${word}</h3>${data.explanation}`;
+                box.style.display = "block";
+                window.scrollTo({ top: box.offsetTop - 20, behavior: "smooth" });
+            })
+            .catch(err => console.error("Fehler bei Erklärung:", err));
+        }
+    </script>
+</body>
+</html>
