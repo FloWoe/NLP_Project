@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <title>Übersetzer</title>
+    <style>
+        body {
+            font-family: sans-serif;
+            background-color: #f5f6fa;
+            margin: 0;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: auto;
+        }
+
+        h1 {
+            text-align: center;
+            color: #003f99;
+        }
+
+        .lang-select {
+            margin-bottom: 15px;
+        }
+
+        .translator-boxes {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+
+        textarea {
+            width: 100%;
+            height: 200px;
+            padding: 10px;
+            font-size: 16px;
+            resize: none;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            background-color: #fff;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        button {
+            padding: 10px 20px;
+            font-size: 16px;
+            background-color: #0052cc;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            display: block;
+            margin: auto;
+        }
+
+        button:hover {
+            background-color: #003f99;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🌍 Übersetzer</h1>
+
+        <div class="lang-select">
+            <label for="targetLang">Zielsprache auswählen:</label>
+            <select id="targetLang">
+                <option value="en">Englisch</option>
+                <option value="fr">Französisch</option>
+                <option value="es">Spanisch</option>
+                <option value="ja">Japanisch</option>
+                <option value="de">Deutsch</option>
+            </select>
+        </div>
+
+        <div class="translator-boxes">
+            <textarea id="inputText" placeholder="🔤 Gib deinen Text hier ein..."></textarea>
+            <textarea id="outputText" readonly placeholder="📘 Übersetzung erscheint hier..."></textarea>
+        </div>
+
+        <button onclick="submitTranslation()">🔁 Übersetzen</button>
+    </div>
+
+    <script>
+        function submitTranslation() {
+            const text = document.getElementById("inputText").value;
+            const targetLang = document.getElementById("targetLang").value;
+    
+            if (!text || !targetLang) {
+                return; // Kein Text oder keine Sprache → kein Request
+            }
+    
+            const payload = {
+                text: text,
+                target_lang: targetLang
+            };
+    
+            fetch("http://127.0.0.1:5000/translate", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(payload)
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error("Serverfehler");
+                }
+                return response.json();
+            })
+            .then(data => {
+                if (data.translated) {
+                    document.getElementById("outputText").value = data.translated;
+                }
+            })
+            .catch(error => {
+                console.error("Fehler:", error);
+                // Keine alert() mehr
+            });
+        }
+    </script>
+    
+</body>
+</html>
+
