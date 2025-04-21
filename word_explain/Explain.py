@@ -1,33 +1,31 @@
 import google.generativeai as genai
-from configuration.config import GEMINI_API_KEY  # 🔑 Hole Key aus config.py
+from configuration.config import GEMINI_API_KEY
 
-# Gemini konfigurieren
 genai.configure(api_key=GEMINI_API_KEY)
 
-# Funktion zum Erklären eines markierten Wortes im Kontext
 def explain_word(translated_text, selected_word):
     model = genai.GenerativeModel("models/gemini-2.0-flash")
-    
+
     prompt = (
-    f"Erkläre das Wort „{selected_word}“, wie es im folgenden Satz verwendet wird: „{translated_text}“.\n"
-    f"Erstelle eine verständliche, gut strukturierte Erklärung für Sprachlerner und beantworte die folgenden Punkte in ganzen Sätzen:\n\n"
-
-    f"**1. Bedeutung:**\n"
-    f"Was bedeutet das Wort in diesem konkreten Satz? Erkläre es in einem vollständigen Satz mit Beispielen.\n\n"
-
-    f"**2. Herkunft:**\n"
-    f"Woher stammt das Wort historisch? Gib die sprachliche Herkunft und eventuelle ursprüngliche Bedeutung an.\n\n"
-
-    f"**3. Grammatikalische Rolle:**\n"
-    f"Welche Wortart hat das Wort in diesem Satz (z. B. Adjektiv, Substantiv, Verb) und wie wird es dort verwendet?\n\n"
-
-    f"**4. Beispiel in anderem Kontext:**\n"
-    f"Gib einen weiteren Beispielsatz, in dem das Wort verwendet wird – aber in einem anderen Zusammenhang.\n\n"
-
-    f"Antworte ausschließlich mit dem formatierten Erklärungstext – ohne Einleitung, ohne Begrüßung."
-)
-
-
+        f"Erkläre das Wort „{selected_word}“, wie es im folgenden Satz verwendet wird: „{translated_text}“.\n"
+        f"Erstelle eine verständliche, strukturierte Erklärung für Sprachlerner mit folgenden Abschnitten:\n\n"
+        f"1. Bedeutung\n"
+        f"2. Herkunft\n"
+        f"3. Grammatikalische Rolle\n"
+        f"4. Beispiel in anderem Kontext\n\n"
+        f"Formatiere deine Antwort ausschließlich mit HTML:\n"
+        f"- Verwende <p> für jeden Absatz\n"
+        f"- Verwende <strong> für jede Abschnittsüberschrift\n"
+        f"- Gib KEINEN Markdown-Code zurück (kein ```html, keine Sterne ** etc.)\n"
+        f"- Gib KEINEN Codeblock zurück\n"
+        f"- Gib NUR HTML aus, keine Kommentare, keine Einleitungen\n"
+    )
 
     gemini_response = model.generate_content(prompt)
-    return gemini_response.text.strip()
+    html_output = gemini_response.text.strip()
+
+    # Sicherheits-Backup: Entferne eventuelle Markdown-Reste
+    if html_output.startswith("```html") or html_output.startswith("```"):
+        html_output = html_output.replace("```html", "").replace("```", "").strip()
+
+    return html_output
