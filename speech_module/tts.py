@@ -1,24 +1,33 @@
 import requests
 from configuration.config import GOOGLE_TTS_API_KEY
 
+# Mapping von Sprache zu passender Stimme
+# Einfaches Mapping für häufige Sprachen
+VOICE_MAPPING = {
+    "de-DE": "de-DE-Wavenet-B",
+    "en-US": "en-US-Wavenet-D",
+    "fr-FR": "fr-FR-Wavenet-A",
+    "es-ES": "es-ES-Standard-A",
+    "ja-JP": "ja-JP-Wavenet-A"
+}
+
+
 def synthesize_speech(text, output_path="output.mp3", lang="de-DE"):
     try:
         url = f"https://texttospeech.googleapis.com/v1/text:synthesize?key={GOOGLE_TTS_API_KEY}"
 
-        # Anfrage-Payload
+        # Sprachcode und Stimme extrahieren
+        lang_code = lang.split("-")[0]  # z. B. "de" aus "de-DE"
+        voice_name = VOICE_MAPPING.get(lang, "en-US-Wavenet-D")  # Fallback
         payload = {
-            "input": {
-                "text": text
-            },
+            "input": { "text": text },
             "voice": {
-                "languageCode": lang,
-                "name": "de-DE-Wavenet-B",
-                "ssmlGender": "NEUTRAL"
-            },
-            "audioConfig": {
-                "audioEncoding": "MP3"
-            }
-        }
+            "languageCode": lang,
+            "name": voice_name,
+            "ssmlGender": "NEUTRAL"},
+    "audioConfig": { "audioEncoding": "MP3" }
+}
+
 
         response = requests.post(url, json=payload)
         response.raise_for_status()
@@ -35,3 +44,4 @@ def synthesize_speech(text, output_path="output.mp3", lang="de-DE"):
     except Exception as e:
         print("❌ Fehler bei der Sprachausgabe:", e)
         return None
+

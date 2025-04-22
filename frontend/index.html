@@ -94,41 +94,70 @@
             border: 1px solid #ccc;
             box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         }
+        .speaking {
+            color: #007bff !important;}
+
     </style>
 </head>
 <body>
-<div class="container">
-    <h1>🌍 Übersetzer</h1>
+    <div class="container">
+        <h1>🌍 Übersetzer</h1>
+    
+        <div class="lang-select" style="display: flex; justify-content: space-between;">
+            <!-- Linke Spalte: erkannte Sprache -->
+            <div style="flex: 1;">
+                <label for="sourceLang">Erkannte Sprache:</label>
+                <select id="sourceLang">
+                    <option value="de">Deutsch</option>
+                    <option value="en">Englisch</option>
+                    <option value="fr">Französisch</option>
+                    <option value="es">Spanisch</option>
+                    <option value="ja">Japanisch</option>
+                </select>
+            </div>
 
-    <div class="lang-select">
-        <label for="targetLang">Zielsprache auswählen:</label>
-        <select id="targetLang">
-            <option value="en">Englisch</option>
-            <option value="fr">Französisch</option>
-            <option value="es">Spanisch</option>
-            <option value="ja">Japanisch</option>
-            <option value="de">Deutsch</option>
-        </select>
-    </div>
-
-    <div class="translator-boxes">
-        <div class="text-box-wrapper">
-            <div id="inputText" contenteditable="true" class="text-box" onmouseup="handleSelection('lang1')"></div>
-            <button class="mic-button" onclick="toggleRecording()" id="micBtn">
-                <i class="bi bi-mic-fill"></i>
+            <button onclick="swapLanguagesAndText()" style="font-size: 22px; border: none; background: none; cursor: pointer;">
+                <i class="bi bi-arrow-left-right"></i>
             </button>
+            
+        
+            <!-- Rechte Spalte: Ziel-Sprache, rechtsbündig -->
+            <div style="flex: 1; text-align: right;">
+                <label for="targetLang">Zielsprache auswählen:</label>
+                <select id="targetLang">
+                    <option value="en">Englisch</option>
+                    <option value="fr">Französisch</option>
+                    <option value="es">Spanisch</option>
+                    <option value="ja">Japanisch</option>
+                    <option value="de">Deutsch</option>
+                </select>
+            </div>
         </div>
-
-        <div class="text-box-wrapper">
-            <div id="outputText" contenteditable="false" class="text-box" onmouseup="handleSelection('lang2')"></div>
-            <button class="speaker-button" onclick="speakText()">
-                <i class="bi bi-volume-up-fill"></i>
-            </button>
+        <div class="translator-boxes">
+            <!-- Eingabetext + Mikrofon -->
+            <div class="text-box-wrapper">
+                <div id="inputText" contenteditable="true" class="text-box" onmouseup="handleSelection('lang1')"></div>
+                <button class="mic-button" onclick="toggleRecording()" id="micBtn">
+                    <i class="bi bi-mic-fill"></i>
+                </button>
+                 <!-- Lautsprecher (NEU) -->
+                <button class="speaker-button" id="inputSpeaker" onclick="speakInputText()" style="left: 40px;">
+                    <i class="bi bi-volume-up-fill"></i>
+                </button>
+            </div>
+    
+            <!-- Übersetzungstext + Lautsprecher -->
+            <div class="text-box-wrapper">
+                <div id="outputText" contenteditable="false" class="text-box" onmouseup="handleSelection('lang2')"></div>
+                <button class="speaker-button" id= "outputSpeaker" onclick="speakText()">
+                    <i class="bi bi-volume-up-fill"></i>
+                </button>
+            </div>
         </div>
+    
+        <div id="explanationBox" style="display: none;"></div>
     </div>
-
-    <div id="explanationBox" style="display: none;"></div>
-</div>
+    
 
 <script>
 let lastInputText = "";
@@ -267,11 +296,13 @@ function toggleRecording() {
                     .then(res => res.json())
                     .then(data => {
                         if (data.transcription) {
-                            document.getElementById("inputText").innerText = data.transcription;
-                        } else {
-                            alert("❌ Keine Transkription empfangen.");
-                        }
-                    })
+                            const inputBox = document.getElementById("inputText");
+                            inputBox.innerText = data.transcription;
+                            // 👇 Manuelles Auslösen des input-Events, damit die Übersetzung losgeht
+                            inputBox.dispatchEvent(new Event("input"));} else {
+                            alert("❌ Keine Transkription empfangen.");}
+                        })
+
                     .catch(err => console.error("Transkriptionsfehler:", err));
                 };
 
@@ -288,15 +319,100 @@ function toggleRecording() {
     }
 }
 
-// 🔊 Text vorlesen
 function speakText() {
     const text = document.getElementById("outputText").innerText.trim();
+    const lang = document.getElementById("targetLang").value;
+    const button = document.getElementById("outputSpeaker");  // Nur dieser Button
+
     if (!text) return;
 
-    const utterance = new SpeechSynthesisUtterance(text);
-    utterance.lang = "de-DE"; // Du kannst es dynamisch machen, je nach Zielsprache
-    speechSynthesis.speak(utterance);
+    button.classList.add("speaking");
+
+    fetch("http://127.0.0.1:5000/tts", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ text: text, lang: lang + "-DE" })
+    })
+    .then(res => {
+        if (!res.ok) throw new Error("TTS fehlgeschlagen");
+        return res.blob();
+    })
+    .then(blob => {
+        const audioURL = URL.createObjectURL(blob);
+        const audio = new Audio(audioURL);
+        audio.play();
+
+        audio.onended = () => {
+            button.classList.remove("speaking");
+        };
+    })
+    .catch(err => {
+        button.classList.remove("speaking");
+        console.error("Fehler bei TTS:", err);
+    });
 }
+
+function swapLanguagesAndText() {
+    const sourceSelect = document.getElementById("sourceLang");
+    const targetSelect = document.getElementById("targetLang");
+
+    // Sprachen tauschen
+    const tempLang = sourceSelect.value;
+    sourceSelect.value = targetSelect.value;
+    targetSelect.value = tempLang;
+
+    // Textfelder tauschen
+    const inputBox = document.getElementById("inputText");
+    const outputBox = document.getElementById("outputText");
+
+    const oldInput = inputBox.innerText.trim();
+    const oldOutput = outputBox.innerText.trim();
+
+    inputBox.innerText = oldOutput;
+    outputBox.innerText = oldInput;
+
+    // Neue Übersetzung auslösen
+    inputBox.dispatchEvent(new Event("input"));
+}
+
+
+function updateDetectedLanguage(langCode) {
+    const dropdown = document.getElementById("sourceLang");
+    if (dropdown) dropdown.value = langCode;
+}
+function speakInputText() {
+    const text = document.getElementById("inputText").innerText.trim();
+    const lang = document.getElementById("sourceLang").value;
+    const button = document.getElementById("inputSpeaker");
+
+    if (!text) return;
+
+    button.classList.add("speaking");
+
+    fetch("http://127.0.0.1:5000/tts", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ text: text, lang: lang + "-DE" })
+    })
+    .then(res => {
+        if (!res.ok) throw new Error("TTS fehlgeschlagen");
+        return res.blob();
+    })
+    .then(blob => {
+        const audioURL = URL.createObjectURL(blob);
+        const audio = new Audio(audioURL);
+        audio.play();
+
+        audio.onended = () => {
+            button.classList.remove("speaking");
+        };
+    })
+    .catch(err => {
+        button.classList.remove("speaking");
+        console.error("Fehler bei TTS (input):", err);
+    });
+}
+
 </script>
 </body>
 </html>

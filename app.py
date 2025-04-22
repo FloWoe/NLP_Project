@@ -4,7 +4,10 @@ from Translation.translator import translate_text
 from word_finding.word_alignment import find_matching_word_crosslingual
 from word_explain.Explain import explain_word
 from speech_module.stt_whisper import transcribe_audio
+from speech_module.tts import synthesize_speech
 import os
+from flask import send_file
+
 
 
 
@@ -75,6 +78,26 @@ def transcribe_audio_route():
         return jsonify({"transcription": transcription})
     except Exception as e:
         return jsonify({"error": f"Fehler bei Transkription: {str(e)}"}), 500
+    
+@app.route("/tts", methods=["POST"])
+def tts():
+    data = request.get_json()
+    text = data.get("text", "")
+    lang_code = data.get("lang", "de")  # z. B. "de", "en", "fr", "ja"
+
+    if not text:
+        return jsonify({"error": "Kein Text erhalten"}), 400
+
+    output_path = "output.mp3"
+
+    # 💡 Übergib den reinen Sprachcode (z. B. "de") an tts.py
+    result_path = synthesize_speech(text=text, output_path=output_path, lang=lang_code)
+
+    if result_path:
+        return send_file(result_path, mimetype="audio/mpeg")
+    else:
+        return jsonify({"error": "Text-to-Speech fehlgeschlagen"}), 500
+
 
 
 if __name__ == "__main__":
