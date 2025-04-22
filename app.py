@@ -3,6 +3,9 @@ from flask_cors import CORS
 from Translation.translator import translate_text
 from word_finding.word_alignment import find_matching_word_crosslingual
 from word_explain.Explain import explain_word
+from speech_module.stt_whisper import transcribe_audio
+import os
+
 
 
 app = Flask(__name__)
@@ -54,6 +57,25 @@ def explain():
         return jsonify({"explanation": explanation})
     except Exception as e:
         return jsonify({"explanation": f"Fehler: {str(e)}"}), 500
+
+@app.route("/transcribe-audio", methods=["POST"])
+def transcribe_audio_route():
+    if "audio" not in request.files:
+        return jsonify({"error": "Keine Audiodatei erhalten"}), 400
+
+    audio_file = request.files["audio"]
+
+    # Speichere temporär als WebM oder MP3 – abhängig vom Browser
+    ext = os.path.splitext(audio_file.filename)[-1].lower()
+    temp_path = os.path.join("speech_module", f"temp_input{ext}")
+    audio_file.save(temp_path)
+
+    try:
+        transcription = transcribe_audio(temp_path)
+        return jsonify({"transcription": transcription})
+    except Exception as e:
+        return jsonify({"error": f"Fehler bei Transkription: {str(e)}"}), 500
+
 
 if __name__ == "__main__":
     app.run(debug=True)

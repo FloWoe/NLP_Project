@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <title>Übersetzer</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
     <style>
         body {
             font-family: sans-serif;
@@ -31,6 +32,11 @@
             margin-bottom: 10px;
         }
 
+        .text-box-wrapper {
+            position: relative;
+            width: 100%;
+        }
+
         .text-box {
             width: 100%;
             height: 200px;
@@ -42,6 +48,30 @@
             box-shadow: 0 1px 3px rgba(0,0,0,0.1);
             overflow-y: auto;
             white-space: pre-wrap;
+            box-sizing: border-box;
+        }
+
+        .mic-button,
+        .speaker-button {
+            position: absolute;
+            bottom: 10px;
+            left: 10px;
+            font-size: 18px;
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 0;
+            color: #555;
+            transition: color 0.3s ease;
+        }
+
+        .mic-button.active {
+            color: red;
+        }
+
+        .mic-button:hover,
+        .speaker-button:hover {
+            color: #007bff;
         }
 
         .highlight {
@@ -64,145 +94,209 @@
             border: 1px solid #ccc;
             box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         }
-
-        button {
-            padding: 10px 20px;
-            font-size: 16px;
-            background-color: #0052cc;
-            color: white;
-            border: none;
-            border-radius: 6px;
-            cursor: pointer;
-            display: block;
-            margin: auto;
-        }
-
-        button:hover {
-            background-color: #003f99;
-        }
     </style>
 </head>
 <body>
-    <div class="container">
-        <h1>🌍 Übersetzer</h1>
+<div class="container">
+    <h1>🌍 Übersetzer</h1>
 
-        <div class="lang-select">
-            <label for="targetLang">Zielsprache auswählen:</label>
-            <select id="targetLang">
-                <option value="en">Englisch</option>
-                <option value="fr">Französisch</option>
-                <option value="es">Spanisch</option>
-                <option value="ja">Japanisch</option>
-                <option value="de">Deutsch</option>
-            </select>
-        </div>
-
-        <div class="translator-boxes">
-            <div id="inputText" contenteditable="true" class="text-box" onmouseup="handleSelection('lang1')"></div>
-            <div id="outputText" contenteditable="false" class="text-box" onmouseup="handleSelection('lang2')"></div>
-        </div>
-
-        <button onclick="submitTranslation()">🔁 Übersetzen</button>
-
-        <div id="explanationBox" style="display: none;"></div>
+    <div class="lang-select">
+        <label for="targetLang">Zielsprache auswählen:</label>
+        <select id="targetLang">
+            <option value="en">Englisch</option>
+            <option value="fr">Französisch</option>
+            <option value="es">Spanisch</option>
+            <option value="ja">Japanisch</option>
+            <option value="de">Deutsch</option>
+        </select>
     </div>
 
-    <script>
-        let lastInputText = "";
-        let lastOutputText = "";
+    <div class="translator-boxes">
+        <div class="text-box-wrapper">
+            <div id="inputText" contenteditable="true" class="text-box" onmouseup="handleSelection('lang1')"></div>
+            <button class="mic-button" onclick="toggleRecording()" id="micBtn">
+                <i class="bi bi-mic-fill"></i>
+            </button>
+        </div>
 
-        function submitTranslation() {
-            const input = document.getElementById("inputText").innerText.trim();
-            const targetLang = document.getElementById("targetLang").value;
+        <div class="text-box-wrapper">
+            <div id="outputText" contenteditable="false" class="text-box" onmouseup="handleSelection('lang2')"></div>
+            <button class="speaker-button" onclick="speakText()">
+                <i class="bi bi-volume-up-fill"></i>
+            </button>
+        </div>
+    </div>
 
-            if (!input || !targetLang) return;
+    <div id="explanationBox" style="display: none;"></div>
+</div>
 
+<script>
+let lastInputText = "";
+let lastOutputText = "";
+let translateTimer;
+
+document.getElementById("inputText").addEventListener("input", () => {
+    const text = document.getElementById("inputText").innerText.trim();
+    const targetLang = document.getElementById("targetLang").value;
+
+    clearTimeout(translateTimer);
+
+    if (text.length > 0) {
+        translateTimer = setTimeout(() => {
             fetch("http://127.0.0.1:5000/translate", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ text: input, target_lang: targetLang })
+                body: JSON.stringify({ text: text, target_lang: targetLang })
             })
             .then(res => res.json())
             .then(data => {
                 if (data.translated) {
-                    lastInputText = input;
+                    lastInputText = text;
                     lastOutputText = data.translated;
                     document.getElementById("outputText").innerText = data.translated;
                 }
             })
             .catch(err => console.error("Fehler:", err));
-        }
+        }, 500);
+    }
+});
 
-        function clearHighlights() {
-            ["inputText", "outputText"].forEach(id => {
-                const el = document.getElementById(id);
-                el.innerHTML = el.innerText;
+function clearHighlights() {
+    ["inputText", "outputText"].forEach(id => {
+        const el = document.getElementById(id);
+        el.innerHTML = el.innerText;
+    });
+    document.getElementById("explanationBox").style.display = "none";
+    document.getElementById("explanationBox").innerHTML = "";
+}
+
+function highlightWord(containerId, word) {
+    const el = document.getElementById(containerId);
+    const text = el.innerText;
+    const escaped = word.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const regex = new RegExp(`\\b(${escaped})\\b`, 'i');
+    const newHTML = text.replace(regex, `<span class="highlight">$1</span><span class="info-icon" onclick="fetchExplanation('$1')"> ℹ️</span>`);
+    el.innerHTML = newHTML;
+}
+
+function handleSelection(lang) {
+    const sel = window.getSelection();
+    const word = sel.toString().trim();
+    if (!word || word.includes(" ")) return;
+
+    const payload = {
+        sentence1: lastInputText,
+        sentence2: lastOutputText,
+        selectedWord: word,
+        selectedFrom: lang
+    };
+
+    fetch("http://127.0.0.1:5000/match-word", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload)
+    })
+    .then(res => res.json())
+    .then(data => {
+        const matched = data.matchedWord;
+        if (!matched || matched.includes("Fehler")) return;
+
+        clearHighlights();
+
+        if (lang === "lang1") {
+            highlightWord("inputText", word);
+            highlightWord("outputText", matched);
+        } else {
+            highlightWord("outputText", word);
+            highlightWord("inputText", matched);
+        }
+    })
+    .catch(err => console.error("Fehler beim Matching:", err));
+}
+
+function fetchExplanation(word) {
+    const sentence = document.getElementById("outputText").innerText;
+
+    fetch("http://127.0.0.1:5000/explain-word", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ sentence: sentence, word: word })
+    })
+    .then(res => res.json())
+    .then(data => {
+        const box = document.getElementById("explanationBox");
+        box.innerHTML = `<h3>Erklärung zu: ${word}</h3>${data.explanation}`;
+        box.style.display = "block";
+        window.scrollTo({ top: box.offsetTop - 20, behavior: "smooth" });
+    })
+    .catch(err => console.error("Fehler bei Erklärung:", err));
+}
+
+// 🎤 Mikrofon / Aufnahme-Logik
+let isRecording = false;
+let mediaRecorder;
+let audioChunks = [];
+
+function toggleRecording() {
+    const micIcon = document.getElementById("micBtn");
+
+    if (!isRecording) {
+        isRecording = true;
+        micIcon.classList.add("active");
+
+        navigator.mediaDevices.getUserMedia({ audio: true })
+            .then(stream => {
+                mediaRecorder = new MediaRecorder(stream);
+                audioChunks = [];
+
+                mediaRecorder.ondataavailable = event => {
+                    if (event.data.size > 0) {
+                        audioChunks.push(event.data);
+                    }
+                };
+
+                mediaRecorder.onstop = () => {
+                    const audioBlob = new Blob(audioChunks, { type: "audio/webm" });
+                    const formData = new FormData();
+                    formData.append("audio", audioBlob, "recording.webm");
+
+                    fetch("http://127.0.0.1:5000/transcribe-audio", {
+                        method: "POST",
+                        body: formData
+                    })
+                    .then(res => res.json())
+                    .then(data => {
+                        if (data.transcription) {
+                            document.getElementById("inputText").innerText = data.transcription;
+                        } else {
+                            alert("❌ Keine Transkription empfangen.");
+                        }
+                    })
+                    .catch(err => console.error("Transkriptionsfehler:", err));
+                };
+
+                mediaRecorder.start();
+            })
+            .catch(err => {
+                alert("🎤 Zugriff auf Mikrofon verweigert.");
+                console.error(err);
             });
-            document.getElementById("explanationBox").style.display = "none";
-            document.getElementById("explanationBox").innerHTML = "";
-        }
+    } else {
+        isRecording = false;
+        micIcon.classList.remove("active");
+        mediaRecorder.stop();
+    }
+}
 
-        function highlightWord(containerId, word) {
-            const el = document.getElementById(containerId);
-            const text = el.innerText;
-            const escaped = word.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-            const regex = new RegExp(`\\b(${escaped})\\b`, 'i');
-            const newHTML = text.replace(regex, `<span class="highlight">$1</span><span class="info-icon" onclick="fetchExplanation('$1')"> ℹ️</span>`);
-            el.innerHTML = newHTML;
-        }
+// 🔊 Text vorlesen
+function speakText() {
+    const text = document.getElementById("outputText").innerText.trim();
+    if (!text) return;
 
-        function handleSelection(lang) {
-            const sel = window.getSelection();
-            const word = sel.toString().trim();
-            if (!word || word.includes(" ")) return;
-
-            const payload = {
-                sentence1: lastInputText,
-                sentence2: lastOutputText,
-                selectedWord: word,
-                selectedFrom: lang
-            };
-
-            fetch("http://127.0.0.1:5000/match-word", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(payload)
-            })
-            .then(res => res.json())
-            .then(data => {
-                const matched = data.matchedWord;
-                if (!matched || matched.includes("Fehler")) return;
-
-                clearHighlights();
-
-                if (lang === "lang1") {
-                    highlightWord("inputText", word);
-                    highlightWord("outputText", matched);
-                } else {
-                    highlightWord("outputText", word);
-                    highlightWord("inputText", matched);
-                }
-            })
-            .catch(err => console.error("Fehler beim Matching:", err));
-        }
-
-        function fetchExplanation(word) {
-            const sentence = document.getElementById("outputText").innerText;
-
-            fetch("http://127.0.0.1:5000/explain-word", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ sentence: sentence, word: word })
-            })
-            .then(res => res.json())
-            .then(data => {
-                const box = document.getElementById("explanationBox");
-                box.innerHTML = `<h3>Erklärung zu: ${word}</h3>${data.explanation}`;
-                box.style.display = "block";
-                window.scrollTo({ top: box.offsetTop - 20, behavior: "smooth" });
-            })
-            .catch(err => console.error("Fehler bei Erklärung:", err));
-        }
-    </script>
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.lang = "de-DE"; // Du kannst es dynamisch machen, je nach Zielsprache
+    speechSynthesis.speak(utterance);
+}
+</script>
 </body>
 </html>
