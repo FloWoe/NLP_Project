@@ -33,3 +33,33 @@ Ein zentrales Feature ist die Möglichkeit, Wörter im Originaltext farblich zu 
 - Marius Essig
 
 
+## 🚀 Installation & Setup
+
+### 1. 📦 Voraussetzungen
+
+- Python 3.10 oder höher
+- [Node.js](https://nodejs.org/) (nur für Dev-Tools, optional)
+- Paketmanager wie `pip`
+
+### 2. 🔁 Repository klonen
+
+```bash
+git clone https://github.com/dein-nutzername/dein-repo.git
+cd dein-repo
+
+### 3.📥 ffmpeg installieren (erforderlich für Audioaufnahme)
+
+#### 🪟 Windows:
+
+1. Lade `ffmpeg` von: [https://www.gyan.dev/ffmpeg/builds/](https://www.gyan.dev/ffmpeg/builds/)
+2. Entpacke z. B. nach:  
+   `C:\ffmpeg`
+3. Füge `C:\ffmpeg\bin` zu deiner **System-Umgebungsvariable `PATH`** hinzu.
+4. Starte dein Terminal neu und überprüfe mit:
+
+```bash
+ffmpeg -version
+
+### 3. API Key erstellen
+
+ggf. muss auch neue KPI Keys für die Speech-to-Text, Text-to-Speech, Gemini und der Google Cloud Translation API neue API Keys erstellt werden.
