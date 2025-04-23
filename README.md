@@ -48,7 +48,7 @@ git clone https://github.com/dein-nutzername/dein-repo.git
 cd dein-repo
 ```
 
-### 3.📥 ffmpeg installieren (erforderlich für Audioaufnahme)
+### 3.📥 ffmpeg installieren (erforderlich für Audioaufnahme mit Whisper)
 
 #### 🪟 Windows:
 
@@ -73,7 +73,7 @@ python app.py
 #### 🌐 Anwendung im Browser öffnen
 
 Öffne deinen Browser und gehe zu:
-[Zum Übersetzer](http://127.0.0.1:5000)
+[http://127.0.0.1:5000](http://127.0.0.1:5000)
 
 
 
