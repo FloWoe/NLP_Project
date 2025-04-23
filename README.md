@@ -46,6 +46,7 @@ Ein zentrales Feature ist die Möglichkeit, Wörter im Originaltext farblich zu 
 ```bash
 git clone https://github.com/dein-nutzername/dein-repo.git
 cd dein-repo
+```
 
 ### 3.📥 ffmpeg installieren (erforderlich für Audioaufnahme)
 
@@ -59,7 +60,20 @@ cd dein-repo
 
 ```bash
 ffmpeg -version
+```
 
-### 3. API Key erstellen
+### 4. API Key erstellen
 
 ggf. muss auch neue KPI Keys für die Speech-to-Text, Text-to-Speech, Gemini und der Google Cloud Translation API neue API Keys erstellt werden.
+
+### 5. Anwendung starten
+```bash
+python app.py
+```
+#### 🌐 Anwendung im Browser öffnen
+
+Öffne deinen Browser und gehe zu:
+[Zum Übersetzer](http://127.0.0.1:5000)
+
+
+
