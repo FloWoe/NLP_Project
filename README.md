@@ -48,19 +48,30 @@ git clone https://github.com/dein-nutzername/dein-repo.git
 cd dein-repo
 ```
 
-### 3.📥 ffmpeg installieren (erforderlich für Audioaufnahme mit Whisper)
+### 3. 🎙️  Whisper vorbereiten (Speech-to-Text)
+
+Whisper benötigt [ffmpeg](https://ffmpeg.org/), um Audio korrekt zu verarbeiten.
 
 #### 🪟 Windows:
 
-1. Lade `ffmpeg` von: [https://www.gyan.dev/ffmpeg/builds/](https://www.gyan.dev/ffmpeg/builds/)
-2. Entpacke z. B. nach:  
-   `C:\ffmpeg`
-3. Füge `C:\ffmpeg\bin` zu deiner **System-Umgebungsvariable `PATH`** hinzu.
-4. Starte dein Terminal neu und überprüfe mit:
+1. Lade die neueste ffmpeg-Version von der offiziellen Seite herunter:  
+   👉 [https://www.gyan.dev/ffmpeg/builds/](https://www.gyan.dev/ffmpeg/builds/)
 
-```bash
-ffmpeg -version
-```
+2. Entpacke den ZIP-Ordner z. B. nach:  
+   `C:\ffmpeg`
+
+3. Füge den Pfad zu `ffmpeg/bin` in deine **Systemumgebungsvariablen** hinzu:
+
+   - Öffne die Windows-Suche und tippe: **"Umgebungsvariablen bearbeiten"**
+   - Klicke bei **"Systemvariablen"** auf `Path` → `Bearbeiten`
+   - Klicke auf `Neu` und füge hinzu:  
+     `C:\ffmpeg\bin`
+
+4. Starte das Terminal oder PowerShell neu und überprüfe, ob `ffmpeg` korrekt installiert ist:
+
+   ```bash
+   ffmpeg -version
+   ```
 
 ### 4. API Key erstellen
 
