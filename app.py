@@ -7,6 +7,8 @@ from speech_module.stt_whisper import transcribe_audio
 from speech_module.tts import synthesize_speech
 import os
 from flask import send_file
+from generate_text.text_generator import generate_text_by_language
+
 
 
 
@@ -97,6 +99,19 @@ def tts():
         return send_file(result_path, mimetype="audio/mpeg")
     else:
         return jsonify({"error": "Text-to-Speech fehlgeschlagen"}), 500
+
+@app.route("/generate-text", methods=["POST"])
+def generate_text_route():
+    data = request.get_json()
+    language_code = data.get("language")  # z. B. "de", "en"
+    difficulty = data.get("difficulty", "medium")  # Standard: medium
+
+    try:
+        generated_text = generate_text_by_language(language_code, difficulty)
+        return jsonify({"text": generated_text})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
 
 
 
