@@ -106,7 +106,7 @@ ggf. muss auch neue KPI Keys für die Speech-to-Text, Text-to-Speech, Gemini und
 
 ### 5. Anwendung starten
 ```bash
-python app.py
+python main.py
 ```
 #### 🌐 Anwendung im Browser öffnen
 
