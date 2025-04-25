@@ -4,7 +4,8 @@ from Translation.translator import translate_text
 from word_finding.word_alignment import find_matching_word_crosslingual
 from word_explain.Explain import explain_word
 from speech_module.stt_whisper import transcribe_audio
-from speech_module.tts import synthesize_speech
+#from speech_module.tts_Google import synthesize_speech
+from speech_module.tts_Elevenlab import synthesize_speech
 import os
 from flask import send_file
 from generate_text.text_generator import generate_text_by_language
@@ -84,22 +85,27 @@ def transcribe_audio_route():
     
 @app.route("/tts", methods=["POST"])
 def tts():
-    data = request.get_json()
-    text = data.get("text", "")
-    lang_code = data.get("lang", "de")  # z. B. "de", "en", "fr", "ja"
+    try:
+        data = request.get_json()
+        text = data.get("text")
 
-    if not text:
-        return jsonify({"error": "Kein Text erhalten"}), 400
+        if not text:
+            return {"error": "Kein Text angegeben"}, 400
 
-    output_path = "output.mp3"
+        # Sprachsynthese durchführen
+        output_path = synthesize_speech(text)
 
-    # 💡 Übergib den reinen Sprachcode (z. B. "de") an tts.py
-    result_path = synthesize_speech(text=text, output_path=output_path, lang=lang_code)
+        # Absoluten Pfad ermitteln (damit Flask die Datei garantiert findet)
+        absolute_path = os.path.abspath(output_path)
 
-    if result_path:
-        return send_file(result_path, mimetype="audio/mpeg")
-    else:
-        return jsonify({"error": "Text-to-Speech fehlgeschlagen"}), 500
+        if os.path.exists(absolute_path):
+            return send_file(absolute_path, mimetype="audio/mpeg", as_attachment=False)
+        else:
+            return {"error": "Datei wurde nicht gefunden"}, 500
+
+    except Exception as e:
+        print("❌ Fehler im TTS-Endpoint:", e)
+        return {"error": str(e)}, 500
 
 @app.route("/generate-text", methods=["POST"])
 def generate_text_route():
@@ -121,9 +127,6 @@ def gap_fill():
     result = create_gap_text_with_gemini(sentence)
 
     return jsonify(result)
-
-
-
 
 
 if __name__ == "__main__":
