@@ -25,7 +25,7 @@ def synthesize_speech(text, output_path="output.mp3", lang="de-DE"):
             "languageCode": lang,
             "name": voice_name,
             "ssmlGender": "NEUTRAL"},
-    "audioConfig": { "audioEncoding": "MP3" }
+            "audioConfig": { "audioEncoding": "MP3" }
 }
 
 
