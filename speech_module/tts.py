@@ -4,10 +4,10 @@ from configuration.config import GOOGLE_TTS_API_KEY
 # Mapping von Sprache zu passender Stimme
 # Einfaches Mapping für häufige Sprachen
 VOICE_MAPPING = {
-    "de-DE": "de-DE-Wavenet-B",
-    "en-US": "en-US-Wavenet-D",
+    "de-DE": "de-DE-Chirp-HD-D",
+    "en-US": "en-US-Wavenet-A",
     "fr-FR": "fr-FR-Wavenet-A",
-    "es-ES": "es-ES-Standard-A",
+    "es-ES": "es-ES-Chirp-HD-D",
     "ja-JP": "ja-JP-Wavenet-A"
 }
 
