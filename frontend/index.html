@@ -75,9 +75,12 @@
         }
 
         .highlight {
-            background-color: yellow;
-            font-weight: bold;
-        }
+    display: inline;
+    background-color: yellow;
+    font-weight: bold;
+    color: black;
+}
+
 
         .info-icon {
             cursor: pointer;
@@ -135,6 +138,14 @@
     background-color: #f3f3f3;
 }
 
+.gap-input {
+    border: 1px solid #999;
+    border-radius: 4px;
+    padding: 3px 6px;
+    font-size: 14px;
+}
+
+
 
 
 
@@ -149,11 +160,11 @@
             <div style="flex: 1;">
                 <label for="sourceLang">Erkannte Sprache:</label>
                 <select id="sourceLang">
-                    <option value="de">Deutsch</option>
-                    <option value="en">Englisch</option>
-                    <option value="fr">Französisch</option>
-                    <option value="es">Spanisch</option>
-                    <option value="ja">Japanisch</option>
+                    <option value="de-DE">Deutsch</option>
+                    <option value="en-US">Englisch</option>
+                    <option value="fr-FR">Französisch</option>
+                    <option value="es-ES">Spanisch</option>
+                    <option value="ja-JP">Japanisch</option>
                 </select>
             </div>
 
@@ -166,11 +177,11 @@
             <div style="flex: 1; text-align: right;">
                 <label for="targetLang">Zielsprache auswählen:</label>
                 <select id="targetLang">
-                    <option value="en">Englisch</option>
-                    <option value="fr">Französisch</option>
-                    <option value="es">Spanisch</option>
-                    <option value="ja">Japanisch</option>
-                    <option value="de">Deutsch</option>
+                    <option value="en-US">Englisch</option>
+                    <option value="fr-FR">Französisch</option>
+                    <option value="es-ES">Spanisch</option>
+                    <option value="ja-JP">Japanisch</option>
+                    <option value="de-DE">Deutsch</option>
                 </select>
             </div>
         </div>
@@ -206,8 +217,19 @@
                 <button class="speaker-button" id= "outputSpeaker" onclick="speakText()">
                     <i class="bi bi-volume-up-fill"></i>
                 </button>
+                <button class="speaker-button" style="left: 40px;" onclick="generateGapFromOutput()">
+                    <i class="bi bi-pencil-fill"></i>
+                </button>
+                
             </div>
         </div>
+        <!-- 🔄 Reset-Button für Markierungen -->
+    <div style="text-align: center; margin-top: 10px;">
+    <button onclick="clearHighlights()" style="padding: 8px 12px; font-size: 16px; border-radius: 6px; border: none; background-color: #eee; cursor: pointer;">
+        🔄 Markierungen zurücksetzen
+    </button>
+</div>
+
     
         <div id="explanationBox" style="display: none;"></div>
     </div>
@@ -247,20 +269,66 @@ document.getElementById("inputText").addEventListener("input", () => {
 function clearHighlights() {
     ["inputText", "outputText"].forEach(id => {
         const el = document.getElementById(id);
-        el.innerHTML = el.innerText;
+
+        // Entfernt ALLE <span class="highlight ...">...</span> und alle Info-Icons (unabhängig von Farbe/Klasse)
+        el.innerHTML = el.innerHTML
+            .replace(/<span[^>]*class="[^"]*highlight[^"]*"[^>]*>(.*?)<\/span>/g, '$1') // alle farbigen Highlights
+            .replace(/<span[^>]*class="[^"]*info-icon[^"]*"[^>]*>.*?<\/span>/g, '');     // ℹ️-Icons
     });
+
+    // Auch das Erklärungsfeld zurücksetzen
     document.getElementById("explanationBox").style.display = "none";
     document.getElementById("explanationBox").innerHTML = "";
+
+    // Optional: Farbspeicher zurücksetzen, wenn du farblich neu starten willst
+    if (typeof highlightColorMap !== "undefined") highlightColorMap.length = 0;
+    if (typeof highlightIndex !== "undefined") highlightIndex = 0;
 }
 
-function highlightWord(containerId, word) {
+
+
+// Speichert bisherige Markierungen und deren Farbcodes
+const highlightColorMap = [];
+
+function highlightWord(containerId, word, colorIndex) {
     const el = document.getElementById(containerId);
-    const text = el.innerText;
-    const escaped = word.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-    const regex = new RegExp(`\\b(${escaped})\\b`, 'i');
-    const newHTML = text.replace(regex, `<span class="highlight">$1</span><span class="info-icon" onclick="fetchExplanation('$1')"> ℹ️</span>`);
-    el.innerHTML = newHTML;
+    if (!el || !word) return;
+
+    const color = highlightColors[colorIndex % highlightColors.length];
+    const regex = new RegExp(`\\b(${word})\\b`, 'gi');
+
+    el.innerHTML = el.innerHTML.replace(regex, match => {
+        if (match.includes('highlight')) return match;
+        return `<span class="highlight" style="background-color:${color}; color:black; display:inline;">${match}</span><span class="info-icon" onclick="fetchExplanation('${match}')"> ℹ️</span>`;
+    });
 }
+
+
+
+
+function addHighlight(containerId, word) {
+    const container = document.getElementById(containerId);
+
+    if (!container || !word) return;
+
+    const regex = new RegExp(`\\b(${word})\\b`, "gi");
+
+    // 💡 Bereits vorhandenes HTML erhalten (nicht resetten wie früher!)
+    container.innerHTML = container.innerHTML.replace(regex, (match) => {
+        // Wenn es schon markiert ist, doppelt vermeiden
+        if (match.includes('class="highlight"')) return match;
+        return `<span class="highlight">${match}</span>`;
+    });
+}
+
+let highlightIndex = 0;
+const highlightColors = [
+    "#ffd500",  // 🌕 Kräftiges Gelb
+    "#39FF14",   // ✅ Neongrün (neu!)
+    "#a200ff",  // 💜 Intensives Lila
+    "#00bfff",  // 🔷 Kräftiges Himmelblau
+    "#ff2b2b"   // 🔴 Knallrot
+];
 
 function handleSelection(lang) {
     const sel = window.getSelection();
@@ -284,15 +352,18 @@ function handleSelection(lang) {
         const matched = data.matchedWord;
         if (!matched || matched.includes("Fehler")) return;
 
-        clearHighlights();
+        // 👉 Markiere mit gemeinsamer Farbe!
+        const colorIndex = highlightIndex;
 
         if (lang === "lang1") {
-            highlightWord("inputText", word);
-            highlightWord("outputText", matched);
+            highlightWord("inputText", word, colorIndex);
+            highlightWord("outputText", matched, colorIndex);
         } else {
-            highlightWord("outputText", word);
-            highlightWord("inputText", matched);
+            highlightWord("outputText", word, colorIndex);
+            highlightWord("inputText", matched, colorIndex);
         }
+
+        highlightIndex++; // jetzt erhöhen – pro Paar!
     })
     .catch(err => console.error("Fehler beim Matching:", err));
 }
@@ -385,7 +456,8 @@ function speakText() {
     fetch("http://127.0.0.1:5000/tts", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ text: text, lang: lang + "-DE" })
+        body: JSON.stringify({ text: text, lang: lang })
+
     })
     .then(res => {
         if (!res.ok) throw new Error("TTS fehlgeschlagen");
@@ -446,7 +518,7 @@ function speakInputText() {
     fetch("http://127.0.0.1:5000/tts", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ text: text, lang: lang + "-DE" })
+        body: JSON.stringify({ text: text, lang: lang })
     })
     .then(res => {
         if (!res.ok) throw new Error("TTS fehlgeschlagen");
@@ -509,6 +581,54 @@ tooltip.addEventListener("mouseleave", () => {
     tooltip.style.display = "none";
 });
 
+function generateGapFromOutput() {
+    const sentence = document.getElementById("outputText").innerText.trim();
+
+    fetch("http://127.0.0.1:5000/gap-fill", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ sentence: sentence })
+    })
+    .then(res => res.json())
+    .then(data => {
+        const gapText = data.gap_text;
+        const originalWord = data.original_word;
+
+        if (!gapText || !originalWord) return;
+
+        // 🔁 Ersetze die Lücke mit einem input-Feld + data-solution für Vergleich
+        const htmlWithGap = gapText.replace(
+            "_____",
+            `<input class="gap-input" type="text" data-solution="${originalWord}" style="width: 80px;">`
+        );
+        document.getElementById("outputText").innerHTML = htmlWithGap;
+    })
+    .catch(err => console.error("Fehler bei Lückentext:", err));
+}
+
+
+document.addEventListener("keydown", function(event) {
+    if (event.key === "Enter") {
+        const allInputs = document.querySelectorAll(".gap-input");
+
+        allInputs.forEach(input => {
+            const userInput = input.value.trim();
+            const correctWord = input.dataset.solution?.trim();
+
+            if (!correctWord) return;
+
+            const replacement = `<b>${correctWord}</b>`;
+
+            if (userInput.toLowerCase() === correctWord.toLowerCase()) {
+                input.outerHTML = replacement;
+                alert("✅ Richtig!");
+            } else {
+                input.outerHTML = replacement;
+                alert(`❌ Falsch! Die richtige Lösung war: "${correctWord}"`);
+            }
+        });
+    }
+});
 
 </script>
 </body>

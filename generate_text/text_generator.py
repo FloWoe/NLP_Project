@@ -18,7 +18,8 @@ def generate_text_by_language(language_code: str, difficulty: str = "medium") ->
         f"Erstelle einen kurzen Text mit etwa 50 Wörtern in der Sprache '{language_code}'.\n"
         f"Der Text soll geeignet sein zum Vokabellernen und aus {difficulty_description} bestehen.\n"
         f"Gib nur den Text selbst aus, ohne Erklärungen oder Titel.\n"
-        f"Keine Einleitung oder begrüßung. Gebe mir einfach nur diesen generierten text zurück."
+        f"Keine Einleitung oder begrüßung. Gebe mir einfach nur diesen generierten text zurück.\n"
+        f"Schreibe unterschiedliche Geschichten. Es sollen nicht immer der gleiche Wortlauf und Inhalt sein. Bei jedem Aufruf soll es ein Text mit komplett anderem Inhalt sein"
     )
 
     gemini_response = model.generate_content(prompt)

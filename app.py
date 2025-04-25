@@ -8,6 +8,7 @@ from speech_module.tts import synthesize_speech
 import os
 from flask import send_file
 from generate_text.text_generator import generate_text_by_language
+from generate_text.gap_generator import create_gap_text_with_gemini
 
 
 
@@ -111,6 +112,16 @@ def generate_text_route():
         return jsonify({"text": generated_text})
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+    
+@app.route("/gap-fill", methods=["POST"])
+def gap_fill():
+    data = request.get_json()
+    sentence = data.get("sentence", "")
+
+    result = create_gap_text_with_gemini(sentence)
+
+    return jsonify(result)
+
 
 
 
