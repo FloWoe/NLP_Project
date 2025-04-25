@@ -126,7 +126,6 @@ Lass Gemini oder dein Backend aus bestehenden Texten Lückentexte erstellen:
 
 ➡️ **NLP-Technik:** Part-of-Speech-Tagging, Lemmatisierung, Gemini Prompting
 
----
 
 ### 2️⃣ Multiple-Choice-Quiz für markiertes Wort
 - Nach Klick auf ein Wort erscheinen 3–4 Bedeutungen
@@ -134,7 +133,6 @@ Lass Gemini oder dein Backend aus bestehenden Texten Lückentexte erstellen:
 
 ➡️ **NLP-Technik:** Word Sense Disambiguation, Kontextverständnis
 
----
 
 ### 3️⃣ Synonyme & Antonyme vorschlagen
 - Zeige verwandte Begriffe für markierte Wörter
@@ -142,7 +140,6 @@ Lass Gemini oder dein Backend aus bestehenden Texten Lückentexte erstellen:
 
 ➡️ **NLP-Technik:** Semantische Ähnlichkeit, Wortvektoren
 
----
 
 ### 4️⃣ Vokabelhistorie & Fortschrittsanzeige
 - Fortschrittsbalken und Statistik zur Nutzung
@@ -151,7 +148,6 @@ Lass Gemini oder dein Backend aus bestehenden Texten Lückentexte erstellen:
 
 ➡️ **NLP-Technik:** personalisierte Vorschläge, N-Gram-Analysen
 
----
 
 ### 5️⃣ Automatisch Beispielsätze für markiertes Wort
 - 3 Beispiele in verschiedenen Stilen:
@@ -160,7 +156,6 @@ Lass Gemini oder dein Backend aus bestehenden Texten Lückentexte erstellen:
 
 ➡️ **NLP-Technik:** Gemini, Kontextvariation
 
----
 
 ### 6️⃣ Übersetzungsvergleich
 - Zeige alternative Übersetzungen von:
@@ -171,7 +166,6 @@ Lass Gemini oder dein Backend aus bestehenden Texten Lückentexte erstellen:
 
 ➡️ **NLP-Technik:** Übersetzungsanalyse, Modellvergleich
 
----
 
 ### 7️⃣ Textverständnis testen (Comprehension Quiz)
 - Stelle Fragen wie „Wer?“, „Was?“, „Warum?“ zum Lerntext
@@ -179,7 +173,6 @@ Lass Gemini oder dein Backend aus bestehenden Texten Lückentexte erstellen:
 
 ➡️ **NLP-Technik:** Named Entity Recognition, Fragebeantwortung
 
----
 
 ### 8️⃣ Sprachlevel-Einstufung
 - Automatische Einstufung nach GER (A2, B1, B2, C1)
@@ -187,7 +180,6 @@ Lass Gemini oder dein Backend aus bestehenden Texten Lückentexte erstellen:
 
 ➡️ **NLP-Technik:** Klassifikation, Textscoring (z. B. Textstat, Gemini)
 
----
 
 ### 9️⃣ Gesprächsmodus (Chat-Übungen mit KI)
 - KI übernimmt eine Rolle (z. B. Kellnerin, Verkäufer)
@@ -195,7 +187,6 @@ Lass Gemini oder dein Backend aus bestehenden Texten Lückentexte erstellen:
 
 ➡️ **NLP-Technik:** Konversationsmodell, Intent-Erkennung
 
----
 
 ### 🔟 Wortverwandtschaften & Wortfamilien
 - Zeige verwandte Wörter zu z. B. „laufen“:
