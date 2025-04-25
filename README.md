@@ -39,6 +39,9 @@ Ein zentrales Feature ist die Möglichkeit, Wörter im Originaltext farblich zu 
 ### Benutzerfunktionen
 
 - User kann sich einloggen und hat eine personalisierte Anwendung
+
+### Übersetzungsfunktionen
+
 - Text kann eingegeben werden und wird automatisch übersetzt
 
 ### Markierung von Wörtern
