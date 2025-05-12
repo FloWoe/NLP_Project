@@ -1,0 +1,240 @@
+body {
+    font-family: sans-serif;
+    background-color: #f5f6fa;
+    margin: 0;
+    padding: 0px;
+}
+
+
+h1 {
+    text-align: center;
+    color: #003f99;
+}
+
+.lang-select {
+    margin-bottom: 15px;
+}
+
+.translator-boxes {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 10px;
+}
+
+.text-box-wrapper {
+    position: relative;
+    width: 100%;
+}
+
+.text-box {
+    width: 100%;
+    height: 200px;
+    padding: 10px;
+    font-size: 16px;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    background-color: #fff;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    overflow-y: auto;
+    white-space: pre-wrap;
+    box-sizing: border-box;
+}
+
+.mic-button,
+.speaker-button {
+    position: absolute;
+    bottom: 10px;
+    left: 10px;
+    font-size: 18px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 0;
+    color: #555;
+    transition: color 0.3s ease;
+}
+
+.mic-button.active {
+    color: red;
+}
+
+.mic-button:hover,
+.speaker-button:hover {
+    color: #007bff;
+}
+
+.highlight {
+    display: inline;
+    background-color: yellow;
+    font-weight: bold;
+    color: black;
+}
+
+.info-icon {
+    cursor: pointer;
+    font-size: 14px;
+    color: #0052cc;
+    margin-left: 4px;
+}
+
+#explanationBox {
+    margin-top: 20px;
+    padding: 15px;
+    border-radius: 8px;
+    background: #fff;
+    border: 1px solid #ccc;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.speaking {
+    color: #007bff !important;
+}
+
+.generate-wrapper {
+    position: absolute;
+    bottom: 10px;
+    right: 10px;
+}
+
+.generate-button {
+    background: none;
+    border: none;
+    color: #ffc107;
+    font-size: 18px;
+    cursor: pointer;
+    position: relative;
+}
+
+.generate-tooltip {
+    display: none;
+    position: absolute;
+    bottom: 30px;
+    right: 0;
+    background-color: #fff;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+    z-index: 200;
+    font-size: 14px;
+    white-space: nowrap;
+}
+
+.generate-tooltip div {
+    padding: 8px 12px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+}
+
+.generate-tooltip div:hover {
+    background-color: #f3f3f3;
+}
+
+.circle {
+    display: inline-block;
+    width: 16px;
+    height: 16px;
+    margin-right: 8px;
+    border-radius: 50%;
+}
+
+.circle.easy {
+    background-color: #28a745;
+}
+
+.circle.medium {
+    background-color: #ffc107;
+}
+
+.circle.hard {
+    background-color: #dc3545;
+}
+
+.gap-input {
+    border: 1px solid #999;
+    border-radius: 4px;
+    padding: 3px 6px;
+    font-size: 14px;
+}
+
+.sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    height: 100vh;
+    width: 250px;
+    background-color: #212529; /* dunkles Grau (Bootstrap Dark) */
+    padding: 20px;
+    box-shadow: 2px 0 5px rgba(0,0,0,0.2);
+    color: #fff;
+}
+
+.sidebar h2 {
+    font-size: 18px;
+    margin-bottom: 20px;
+    color: #fff;
+}
+
+.sidebar ul {
+    list-style-type: none;
+    padding: 0;
+}
+
+.sidebar ul li {
+    margin: 10px 0;
+}
+
+.sidebar ul li a {
+    text-decoration: none;
+    color: #ccc;
+    font-size: 16px;
+    display: flex;
+    align-items: center;
+    padding: 10px;
+    border-radius: 5px;
+    transition: background 0.2s ease;
+}
+
+.sidebar ul li a:hover {
+    background-color: #343a40;
+    color: #fff;
+}
+
+.sidebar ul li a.active {
+    background-color: #0d6efd;
+    color: #fff;
+}
+
+.sidebar ul li a i {
+    margin-right: 10px;
+    font-size: 1.2rem;
+}
+
+.container {
+    margin-left: 270px; /* Platz für Sidebar */
+    padding: 20px;
+}
+
+.translator-boxes {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    width: 100%;
+    justify-content: center;
+  }
+  .text-box-wrapper {
+    position: relative;
+    flex: 1 1 400px;
+    min-width: 300px;
+    max-width: 600px;
+  }
+  .text-box {
+    width: 100%;
+    height: 200px;
+    padding: 10px;
+    border-radius: 6px;
+    border: 1px solid #ccc;
+    background-color: #fff;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    font-size: 16px;
+    overflow-y: auto;}

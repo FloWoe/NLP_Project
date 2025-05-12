@@ -11,6 +11,18 @@ def translate_text(text, target_lang):
     }
     response = requests.post(url, params=params)
     if response.status_code == 200:
-        return response.json()["data"]["translations"][0]["translatedText"]
+        translated = response.json()["data"]["translations"][0]["translatedText"]
+
+        if target_lang == "ja":
+            try:
+                import pykakasi
+                kakasi = pykakasi.kakasi()
+                result = kakasi.convert(translated)
+                reading = " ".join([item["hepburn"] for item in result])
+                return {"translated": reading, "reading": reading}
+            except:
+                return {"translated": translated, "reading": None}
+        else:
+            return {"translated": translated, "reading": None}
     else:
         raise Exception("Fehler bei der Übersetzung")

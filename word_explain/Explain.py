@@ -19,6 +19,7 @@ def explain_word(translated_text, selected_word):
         f"- Gib KEINEN Markdown-Code zurück (kein ```html, keine Sterne ** etc.)\n"
         f"- Gib KEINEN Codeblock zurück\n"
         f"- Gib NUR HTML aus, keine Kommentare, keine Einleitungen\n"
+        f" Bitte pro Punkt als Bedeutung, Herkunft etc. nur 1-3 Sätze schreiben, nicht zu ausführlich"
     )
 
     gemini_response = model.generate_content(prompt)
