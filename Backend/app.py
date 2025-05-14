@@ -11,7 +11,7 @@ import os
 from flask import send_file
 from generate_text.text_generator import generate_text_by_language
 from generate_text.gap_generator import create_gap_text_with_gemini
-from Backend.vocab_db import init_db, VocabEntry, save_vocab,  get_all_vocab, sqlite3
+from Backend.vocab_db import init_db, VocabEntry, save_vocab,  get_all_vocab, sqlite3, get_vocab_by_target_lang, search_vocab_advanced
 from vocab_quiz.quiz_engine import start_vocab_quiz, evaluate_translation_with_gemini
 
 
@@ -252,7 +252,80 @@ def delete_all_vocab():
         return jsonify({"status": "success"})
     except Exception as e:
         return jsonify({"status": "error", "message": str(e)}), 500
+
+@app.route("/get-vocab-by-lang")
+def get_vocab_by_lang():
+    lang = request.args.get("lang", "")
+    from Backend.vocab_db import get_vocab_by_target_lang
+    results = get_vocab_by_target_lang(lang)
+    return jsonify([
+        {
+            "id": row[0],
+            "original_word": row[1],
+            "translated_word": row[2],
+            "source_lang": row[3],
+            "target_lang": row[4],
+            "original_sentence": row[5],
+            "translated_sentence": row[6],
+            "created_at": row[7]
+        }
+        for row in results
+    ])
     
+
+@app.route("/search-vocab", methods=["GET"])
+def search_vocab():
+    query = request.args.get("q", "").strip()
+    if not query:
+        return jsonify([])
+
+    results = search_vocab_advanced(query)  # NEU: statt fuzzy
+
+    # Struktur bleibt gleich
+    formatted = []
+    for row in results:
+        formatted.append({
+            "id": row["id"],
+            "original_word": row["original_word"],
+            "translated_word": row["translated_word"],
+            "source_lang": row.get("source_lang", ""),  # Optional absichern
+            "target_lang": row.get("target_lang", ""),
+            "original_sentence": row["original_sentence"],
+            "translated_sentence": row["translated_sentence"],
+            "created_at": row.get("created_at", "")
+        })
+
+    return jsonify(formatted)
+
+@app.route("/suggest-vocab", methods=["GET"])
+def suggest_vocab():
+    query = request.args.get("q", "").lower()
+    if not query or len(query) < 2:
+        return jsonify([])
+
+    conn = sqlite3.connect("vocab.db")
+    cursor = conn.cursor()
+    cursor.execute("""
+        SELECT DISTINCT original_word FROM vocabulary
+        UNION
+        SELECT DISTINCT translated_word FROM vocabulary
+        UNION
+        SELECT DISTINCT original_sentence FROM vocabulary
+        UNION
+        SELECT DISTINCT translated_sentence FROM vocabulary
+    """)
+    all_texts = cursor.fetchall()
+    conn.close()
+
+    words = set()
+    for row in all_texts:
+        for word in row[0].split():
+            if word.lower().startswith(query):
+                words.add(word)
+
+    return jsonify(sorted(words)[:10])  # Nur Top 10 Vorschläge
+
+
 @app.route("/quiz")
 def run_quiz():
     start_vocab_quiz()
@@ -263,7 +336,9 @@ def run_quiz():
 def quiz_data():
     from vocab_quiz.quiz_engine import fetch_vocab_from_db, generate_example_sentence
 
-    vocab_list = fetch_vocab_from_db()
+    lang = request.args.get("lang")  # <-- Hole ausgewählte Sprache
+    vocab_list = fetch_vocab_from_db(lang_code=lang)  # Übergib an die Datenbankfunktion
+
     results = []
     for row in vocab_list:
         v_id, original, translated, source_lang, target_lang = row
@@ -278,24 +353,46 @@ def quiz_data():
         })
     return jsonify(results)
 
+
+
 @app.route("/evaluate-answer", methods=["POST"])
 def evaluate_answer():
-    data = request.json
-    source_sentence = data.get("source_sentence")
-    user_translation = data.get("user_translation")
-    expected_word = data.get("expected_word")
-    target_lang = data.get("target_lang")
-
-    if not all([source_sentence, user_translation, expected_word, target_lang]):
-        return jsonify({"error": "❌ Fehlende Daten im Request"}), 400
-
     try:
-        feedback = evaluate_translation_with_gemini(
-            source_sentence, user_translation, expected_word, target_lang
+        data = request.get_json()
+        result = evaluate_translation_with_gemini(
+            data["source_sentence"],
+            data["user_translation"],
+            data["expected_word"],
+            data["target_lang"]
         )
-        return jsonify({"feedback": feedback})
+        if not result:
+            return jsonify({"feedback": "⚠️ Fehler bei der Bewertung"}), 200
+        return jsonify({"feedback": result}), 200
     except Exception as e:
-        return jsonify({"error": f"Gemini-Fehler: {str(e)}"}), 500
+        print("❌ Bewertungsfehler:", str(e))
+        return jsonify({"feedback": "⚠️ Fehler bei der Bewertung"}), 500
+
+
+
+
+@app.route("/vocab-language-stats")
+def vocab_language_stats():
+    import sqlite3
+    conn = sqlite3.connect("vocab.db")
+    cursor = conn.cursor()
+    cursor.execute("""
+        SELECT target_lang, COUNT(*) 
+        FROM vocabulary 
+        GROUP BY target_lang
+    """)
+    data = cursor.fetchall()
+    conn.close()
+
+    return jsonify({
+        "labels": [row[0] for row in data],
+        "counts": [row[1] for row in data]
+    })
+
 
 
 
