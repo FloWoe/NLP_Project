@@ -71,11 +71,19 @@ Ein zentrales Feature ist die Möglichkeit, Wörter im Originaltext farblich zu 
 ### 2. 🔁 Repository klonen
 
 ```bash
-git clone https://github.com/dein-nutzername/dein-repo.git
+git clone https://github.com/FloWoe/NLP_Project.git
 cd dein-repo
 ```
 
-### 3. 🎙️  Whisper vorbereiten (Speech-to-Text)
+### 3. Benötigte Libaires installieren:
+
+```bash
+pip install -r requirements.txt
+python -m spacy download de_core_news_sm
+python -m nltk.downloader punkt
+```
+
+### 4. 🎙️  Whisper vorbereiten (Speech-to-Text)
 
 Whisper benötigt [ffmpeg](https://ffmpeg.org/), um Audio korrekt zu verarbeiten.
 
@@ -100,11 +108,11 @@ Whisper benötigt [ffmpeg](https://ffmpeg.org/), um Audio korrekt zu verarbeiten
    ffmpeg -version
    ```
 
-### 4. API Key erstellen
+### 5. API Key erstellen
 
 ggf. muss auch neue KPI Keys für die Speech-to-Text, Text-to-Speech, Gemini und der Google Cloud Translation API neue API Keys erstellt werden.
 
-### 5. Anwendung starten
+### 6. Anwendung starten
 ```bash
 python main.py
 ```
