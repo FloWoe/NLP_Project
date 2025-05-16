@@ -2,7 +2,7 @@ import google.generativeai as genai
 import spacy
 from nltk.stem.snowball import SnowballStemmer
 from configuration.config import GEMINI_API_KEY
-from Translation.translator import translate_text  # Für Google Translate
+from Translation.translator import translate_text
 
 # ✅ Gemini konfigurieren
 genai.configure(api_key=GEMINI_API_KEY)
@@ -68,7 +68,7 @@ def get_pos_tag(word: str, lang_code: str, sentence: str = None) -> str:
             return token.pos_
     return ""
 
-def find_all_words_with_same_lemma(text: str, lemma: str, lang_code: str) -> list:
+def find_all_forms_by_lemma(text: str, lemma: str, lang_code: str) -> list:
     nlp = nlp_models.get(lang_code)
     if not nlp:
         return []
@@ -104,7 +104,6 @@ def extract_lemmas_from_phrase(phrase: str, lang_code: str) -> list:
     doc = nlp(phrase)
     return [token.lemma_.lower() for token in doc if token.pos_ in ["VERB", "AUX", "NOUN", "ADJ"]]
 
-# 🧠 Wortvergleich basierend auf echter Google-Übersetzung
 def align_selected_word(original_sentence, selected_word, source_lang_code, target_lang_code):
     translation_result = translate_text(original_sentence, target_lang_code)
     translated_sentence = translation_result["translated"]
@@ -116,7 +115,6 @@ def align_selected_word(original_sentence, selected_word, source_lang_code, targ
         target_lang=target_lang_code
     )
 
-# 🧠 Gemini-basierter Matching-Vergleich
 def find_matching_word_crosslingual(
     sentence_lang1: str,
     sentence_lang2: str,
@@ -135,41 +133,58 @@ def find_matching_word_crosslingual(
             f"Ein Wort wurde markiert: „{selected_word}“\n"
             f"📘 Originalsatz ({source_lang}): \"{sentence_lang1}\"\n"
             f"📗 Zielsatz ({target_lang}): \"{sentence_lang2}\"\n\n"
-            f"👉 Gib das passende Wort oder die Wortgruppe im ZIELSATZ zurück – keine Erklärungen, keine Varianten."
+            f"👉 Gib bitte die Übersetzung oder die semantisch passenden Wörter/Begriffe im ZIELSATZ zurück:\n\n"
+            f"- Wenn es sich um eine **zusammenhängende Wortgruppe** handelt (z. B. 'conformational change'), gib sie als **eine Phrase ohne Kommas** zurück.\n"
+            f"- Wenn mehrere **unabhängige Begriffe** gemeint sind (z. B. 'training, methods'), trenne sie mit Komma.\n"
+            f"- Wenn **mehrere Formen** eines Wortes (Plural/Singular/Zeitformen) vorkommen, gib sie **kommasepariert** zurück.\n\n"
+            f"Gib bitte **nur die passenden Wörter oder Wortgruppen im Zieltext** zurück – ohne Erklärung, ohne Varianten."
         )
 
+        prompt = prompt.encode("utf-8", "replace").decode("utf-8")
         gemini_response = model.generate_content(prompt)
-        matched_word_raw = gemini_response.text.strip()
+        matched_word_raw = gemini_response.text.strip().replace("\n", ",")
         matched_word_list = [w.strip() for w in matched_word_raw.split(",") if w.strip()]
 
+        # Bevorzugt ganze Phrasen mit Leerzeichen
+        phrases = [m for m in matched_word_list if " " in m]
+        if phrases:
+            matched_word_list = phrases
+
+        nlp_target = nlp_models.get(target_lang)
+        lemmatized_gemini = []
+        if nlp_target:
+            for word in matched_word_list:
+                doc = nlp_target(word)
+                for token in doc:
+                    lemmatized_gemini.append(token.lemma_.lower())
+            matched_word_list += lemmatized_gemini
+
         selected_lemma = lemmatize(selected_word, source_lang, sentence_lang1)
-        original_matches = find_all_words_with_same_lemma(sentence_lang1, selected_lemma, source_lang)
+        original_matches = find_all_forms_by_lemma(sentence_lang1, selected_lemma, source_lang)
 
         translated_matches = []
         matched_lemmas = []
 
         if is_selected_article:
-            # 🔥 Hole ALLE Artikel aus dem Zieltext – nicht nur die von Gemini
             translated_matches = [
-                token.text for token in nlp_models[target_lang](sentence_lang2)
+                token.text for token in nlp_target(sentence_lang2)
                 if is_article_by_stem(token.text, target_lang)
             ]
         else:
-            for word in matched_word_list:
-                word_clean = word if is_verb_only(word, target_lang) else remove_articles(word, target_lang)
-                lemmas = extract_lemmas_from_phrase(word_clean, target_lang)
+            for phrase in matched_word_list:
+                clean = phrase if is_verb_only(phrase, target_lang) else remove_articles(phrase, target_lang)
+                lemmas = extract_lemmas_from_phrase(clean, target_lang)
                 for lemma in lemmas:
                     matched_lemmas.append(lemma)
-                    translated_matches += find_all_words_with_same_lemma(sentence_lang2, lemma, target_lang)
+                    translated_matches += find_all_forms_by_lemma(sentence_lang2, lemma, target_lang)
 
         match_success = any(
-            word.lower() in sentence_lang2.lower()
-            or word.lower() in [w.lower() for w in translated_matches]
-            for word in matched_word_list
+            p.lower() in sentence_lang2.lower() or p.lower() in [w.lower() for w in translated_matches]
+            for p in matched_word_list
         )
 
-        if not translated_matches and any(w.lower() in sentence_lang2.lower() for w in matched_word_list):
-            translated_matches += matched_word_list
+        if not translated_matches:
+            translated_matches = matched_word_list
 
         return {
             "selected_word": selected_word,
@@ -179,9 +194,12 @@ def find_matching_word_crosslingual(
             "matched_word_cleaned": ", ".join(matched_word_list),
             "matched_lemma": ", ".join(matched_lemmas),
             "original_matches": original_matches,
-            "translated_matches": translated_matches,
+            "translated_matches": list(set(translated_matches)),
             "match_success": match_success
         }
 
     except Exception as e:
         return {"error": f"(Fehler bei Gemini: {e})"}
+
+
+

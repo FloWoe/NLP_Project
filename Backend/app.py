@@ -1,29 +1,44 @@
-from flask import Flask, render_template, request, jsonify
-from flask_cors import CORS  
+import os
+from flask import Flask, render_template, request, jsonify, send_file
+from flask_cors import CORS
 from Translation.translator import translate_text
 from word_finding.word_alignment import find_matching_word_crosslingual
 from word_explain.Explain import explain_word
 from speech_module.stt_whisper import transcribe_audio
-#from speech_module.tts_Google import synthesize_speech
 from speech_module.tts_Elevenlab import synthesize_speech
-import google.generativeai as genai
-import os
-from flask import send_file
 from generate_text.text_generator import generate_text_by_language
 from generate_text.gap_generator import create_gap_text_with_gemini
-from Backend.vocab_db import init_db, VocabEntry, save_vocab,  get_all_vocab, sqlite3, get_vocab_by_target_lang, search_vocab_advanced
+from Backend.vocab_db import init_db, VocabEntry, save_vocab, get_all_vocab, sqlite3, get_vocab_by_target_lang, search_vocab_advanced
 from vocab_quiz.quiz_engine import start_vocab_quiz, evaluate_translation_with_gemini
+import google.generativeai as genai
 
-
-
-
-app = Flask(__name__)
-CORS(app)  # ✅ Aktiviert CORS für alle Routen
+  # ✅ Aktiviert CORS für alle Routen
 init_db()
+
+template_path = os.path.join(os.path.dirname(__file__), "..", "templates")
+static_path = os.path.join(os.path.dirname(__file__), "..", "static")
+
+app = Flask(__name__, template_folder=template_path, static_folder=static_path)
+CORS(app)
 
 @app.route("/")
 def index():
     return render_template("index.html")
+
+# Weitere Seiten (optional)
+@app.route("/quiz")
+def quiz():
+    return render_template("quiz.html")
+
+@app.route("/dashboard")
+def dashboard():
+    return render_template("Dashboard.html")
+
+@app.route("/favorite")
+def favorite():
+    return render_template("favorite.html")
+
+
 
 
 @app.route("/translate", methods=["POST"])
