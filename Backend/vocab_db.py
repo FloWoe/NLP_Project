@@ -179,3 +179,59 @@ def get_vocab_for_quiz():
     rows = cursor.fetchall()
     conn.close()
     return rows
+
+def init_result_table():
+    conn = sqlite3.connect("vocab.db")
+    cursor = conn.cursor()
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS quiz_results (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            language TEXT,
+            vocab_score INTEGER,
+            sentence_score INTEGER,
+            total_score INTEGER,
+            passed BOOLEAN,
+            timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
+        )
+    """)
+    conn.commit()
+    conn.close()
+
+def save_quiz_result(language: str, vocab_score: int, sentence_score: int, total_score: int, passed: bool):
+    conn = sqlite3.connect("vocab.db")
+    cursor = conn.cursor()
+    cursor.execute("""
+        INSERT INTO quiz_results (
+            language, vocab_score, sentence_score, total_score, passed
+        ) VALUES (?, ?, ?, ?, ?)
+    """, (language, vocab_score, sentence_score, total_score, passed))
+    conn.commit()
+    conn.close()
+
+def get_all_results():
+    conn = sqlite3.connect("vocab.db")
+    cursor = conn.cursor()
+    cursor.execute("""
+        SELECT language, vocab_score, sentence_score, total_score, passed, timestamp
+        FROM quiz_results
+        ORDER BY timestamp DESC
+    """)
+    rows = cursor.fetchall()
+    conn.close()
+    return rows
+
+def get_summary_stats():
+    conn = sqlite3.connect("vocab.db")
+    cursor = conn.cursor()
+    cursor.execute("SELECT COUNT(*) FROM quiz_results")
+    total_tests = cursor.fetchone()[0]
+
+    cursor.execute("SELECT COUNT(*) FROM quiz_results WHERE passed = 1")
+    passed_tests = cursor.fetchone()[0]
+
+    conn.close()
+    return {
+        "total_tests": total_tests,
+        "passed_tests": passed_tests,
+        "success_rate": round((passed_tests / total_tests) * 100, 1) if total_tests > 0 else 0
+    }

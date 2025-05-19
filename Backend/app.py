@@ -8,12 +8,13 @@ from speech_module.stt_whisper import transcribe_audio
 from speech_module.tts_Elevenlab import synthesize_speech
 from generate_text.text_generator import generate_text_by_language
 from generate_text.gap_generator import create_gap_text_with_gemini
-from Backend.vocab_db import init_db, VocabEntry, save_vocab, get_all_vocab, sqlite3, get_vocab_by_target_lang, search_vocab_advanced
+from Backend.vocab_db import init_db, VocabEntry, save_vocab, get_all_vocab, sqlite3, get_vocab_by_target_lang, search_vocab_advanced, init_result_table, VocabEntry, get_vocab_by_target_lang,save_quiz_result, get_all_results, get_summary_stats
 from vocab_quiz.quiz_engine import start_vocab_quiz, evaluate_translation_with_gemini
 import google.generativeai as genai
 
   # ✅ Aktiviert CORS für alle Routen
 init_db()
+init_result_table()  # Quiz-Ergebnisse-Tabelle anlegen
 
 template_path = os.path.join(os.path.dirname(__file__), "..", "templates")
 static_path = os.path.join(os.path.dirname(__file__), "..", "static")
@@ -407,6 +408,60 @@ def vocab_language_stats():
         "labels": [row[0] for row in data],
         "counts": [row[1] for row in data]
     })
+
+@app.route("/save-result", methods=["POST"])
+def save_result():
+    data = request.get_json()
+    try:
+        save_quiz_result(
+            language=data.get("language", "unbekannt"),
+            vocab_score=int(data.get("vocab_score", 0)),
+            sentence_score=int(data.get("sentence_score", 0)),
+            total_score=int(data.get("total_score", 0)),
+            passed=bool(data.get("passed", False))
+        )
+        return jsonify({"status": "success"})
+    except Exception as e:
+        return jsonify({"status": "error", "message": str(e)}), 500
+
+@app.route("/quiz-result-summary")
+def quiz_result_summary():
+    from Backend.vocab_db import get_summary_stats
+    stats = get_summary_stats()
+    failed_tests = stats["total_tests"] - stats["passed_tests"]
+    return jsonify({
+        "passed": stats["passed_tests"],
+        "failed": failed_tests
+    })
+
+@app.route("/dashboard-kpis")
+def dashboard_kpis():
+    import sqlite3
+    conn = sqlite3.connect("vocab.db")
+    cursor = conn.cursor()
+
+    cursor.execute("SELECT COUNT(*) FROM quiz_results")
+    total_tests = cursor.fetchone()[0]
+
+    cursor.execute("SELECT COUNT(*) FROM vocabulary")
+    total_vocab = cursor.fetchone()[0]
+
+    cursor.execute("SELECT AVG(total_score) FROM quiz_results")
+    avg_score = cursor.fetchone()[0] or 0
+
+    cursor.execute("SELECT total_score FROM quiz_results ORDER BY id DESC LIMIT 1")
+    last_score_row = cursor.fetchone()
+    last_score = last_score_row[0] if last_score_row else 0
+
+    conn.close()
+
+    return jsonify({
+        "total_tests": total_tests,
+        "total_vocab": total_vocab,
+        "avg_score": round(avg_score),
+        "last_score": round(last_score)
+    })
+
 
 
 
