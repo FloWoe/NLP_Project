@@ -75,12 +75,11 @@ git clone https://github.com/FloWoe/NLP_Project.git
 cd dein-repo
 ```
 
-### 3. Benötigte Libaires installieren:
+### 3. Benötigte Libaires/Spacy Sprachmodelle laden installieren:
 
 ```bash
 pip install -r requirements.txt
-python -m spacy download de_core_news_sm
-python -m nltk.downloader punkt
+python spacy_install.py
 ```
 
 ### 4. 🎙️  Whisper vorbereiten (Speech-to-Text)

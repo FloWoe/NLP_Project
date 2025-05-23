@@ -102,6 +102,9 @@ def get_random_vocab_entry() -> VocabEntry | None:
 from rapidfuzz import fuzz
 
 def search_vocab_advanced(query: str, top_k=15):
+    from rapidfuzz.distance import Levenshtein
+
+    query_lower = query.lower()
     conn = sqlite3.connect("vocab.db")
     cursor = conn.cursor()
     cursor.execute("""
@@ -112,47 +115,22 @@ def search_vocab_advanced(query: str, top_k=15):
     conn.close()
 
     results = []
-    texts = [f"{r[1]} {r[2]} {r[3]} {r[4]}" for r in rows]
 
-    # TF-IDF Ähnlichkeit vorbereiten
-    vectorizer = TfidfVectorizer().fit(texts + [query])
-    tfidf_matrix = vectorizer.transform(texts + [query])
-    cosine_scores = cosine_similarity(tfidf_matrix[-1], tfidf_matrix[:-1]).flatten()
-
-    query_lower = query.lower()
-
-    for idx, row in enumerate(rows):
+    for row in rows:
         original_word = row[1].lower()
         translated_word = row[2].lower()
-        original_sent = row[3].lower()
-        translated_sent = row[4].lower()
 
-        # Levenshtein-Distanz (auf Wörter)
-        lev_word_score = 1 / (1 + min(
+        # Levenshtein-Distanz nur auf die beiden Wörter (nicht Sätze!)
+        lev_dist = min(
             Levenshtein.distance(query_lower, original_word),
             Levenshtein.distance(query_lower, translated_word)
-        ))
-
-        # Levenshtein-Distanz (auf Sätze)
-        lev_sent_score = 1 / (1 + min(
-            Levenshtein.distance(query_lower, original_sent),
-            Levenshtein.distance(query_lower, translated_sent)
-        ))
-
-        # Zusätzlicher Bonus bei direktem Vorkommen
-        substring_bonus = 0
-        if query_lower in original_sent or query_lower in translated_sent:
-            substring_bonus = 0.2
-
-        # Neue Gewichtung: Fokus auf Satzinhalt
-        combined_score = (
-            0.1 * lev_word_score +
-            0.1 * lev_sent_score +
-            0.8 * cosine_scores[idx] +
-            substring_bonus
         )
 
-        results.append((combined_score, row))
+        max_len = max(len(query_lower), len(original_word), len(translated_word))
+        similarity_score = 1 - (lev_dist / max_len)  # normalisiert
+
+        if similarity_score >= 0.6:  # Schwelle: wie unscharf erlaubt ist
+            results.append((similarity_score, row))
 
     best = sorted(results, key=lambda x: x[0], reverse=True)[:top_k]
 
@@ -162,9 +140,8 @@ def search_vocab_advanced(query: str, top_k=15):
         translated_word=r[1][2],
         original_sentence=r[1][3],
         translated_sentence=r[1][4]
-    ) for r in best if r[0] > 0.05]
+    ) for r in best]
 
-    
 
 def get_vocab_for_quiz():
     conn = sqlite3.connect("vocab.db")
@@ -235,3 +212,32 @@ def get_summary_stats():
         "passed_tests": passed_tests,
         "success_rate": round((passed_tests / total_tests) * 100, 1) if total_tests > 0 else 0
     }
+    
+def init_learning_table():
+    conn = sqlite3.connect("vocab.db")
+    cursor = conn.cursor()
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS vocab_learning_results (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            vocab_id INTEGER,
+            result TEXT,
+            timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
+        )
+    """)
+    conn.commit()
+    conn.close()
+
+def init_learning_progress_table():
+    conn = sqlite3.connect("vocab.db")
+    cursor = conn.cursor()
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS vocab_learning_progress (
+            vocab_id INTEGER PRIMARY KEY,
+            streak INTEGER DEFAULT 0,
+            last_result TEXT,
+            last_reviewed TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+    """)
+    conn.commit()
+    conn.close()
+

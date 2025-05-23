@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <title>Vokabel lernen</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
+  <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+
+  <style>
+    body {
+      background-color: #f8f9fa;
+    }
+
+    .main-content {
+      margin-left: 220px;
+      padding: 2rem;
+    }
+
+    .card-wrapper {
+      perspective: 1000px;
+      max-width: 450px;
+      margin: 40px auto;
+    }
+
+    .flashcard {
+      position: relative;
+      width: 100%;
+      height: 320px;
+      border-radius: 15px;
+      text-align: center;
+      transition: transform 0.8s;
+      transform-style: preserve-3d;
+      box-shadow: 0 0 20px rgba(0, 0, 0, 0.05);
+    }
+
+    .flashcard.flipped {
+      transform: rotateY(180deg);
+    }
+
+    .card-face {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      backface-visibility: hidden;
+      border-radius: 15px;
+      background: white;
+      padding: 2rem;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .card-front {
+      font-size: clamp(1.2rem, 5vw, 2.5rem);
+      font-weight: bold;
+    }
+
+    .card-back {
+      transform: rotateY(180deg);
+    }
+
+    .translation {
+      font-size: clamp(1.2rem, 5vw, 2rem);
+      font-weight: bold;
+      color: #007bff;
+      margin-bottom: 1.5rem;
+    }
+
+    .answer-buttons button {
+      margin: 0.25rem 0;
+    }
+
+    .bi-volume-up-fill {
+      cursor: pointer;
+      transition: transform 0.2s;
+    }
+
+    .bi-volume-up-fill:hover {
+      transform: scale(1.2);
+    }
+
+    .progress-text {
+      text-align: center;
+      font-size: 1rem;
+      margin-top: 0.5rem;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Sidebar -->
+  <div class="sidebar">
+    <h2><i class="bi bi-list-stars"></i> Navigation</h2>
+    <ul>
+      <li><a href="/"><i class="bi bi-house-door-fill"></i> Home</a></li>
+      <li><a href="/favorite"><i class="bi bi-star-fill"></i> Vokabeln</a></li>
+      <li><a href="/quiz"><i class="bi bi-patch-question-fill"></i> Vokabeltest</a></li>
+      <li><a href="/lernen" class="active"><i class="bi bi-book-half"></i> Lernen</a></li>
+      <li><a href="/dashboard"><i class="bi bi-bar-chart-line-fill"></i> Dashboard</a></li>
+    </ul>
+  </div>
+
+  <!-- Hauptinhalt -->
+  <div class="main-content">
+    <h1><i class="bi bi-journal-check"></i> Lernmodus</h1>
+
+    <div id="progressContainer" class="mb-3">
+      <div class="progress">
+        <div class="progress-bar" id="progressBar" role="progressbar" style="width: 0%"></div>
+      </div>
+      <div class="progress-text" id="progressText">Fortschritt: 0 von 5</div>
+    </div>
+
+    <div class="text-center">
+      <button class="btn btn-primary mb-4" onclick="startSession()">
+        <i class="bi bi-arrow-repeat"></i> Neue Session starten
+      </button>
+    </div>
+
+    <div class="card-wrapper">
+      <div id="flashcard" class="flashcard">
+        <div class="card-face card-front" id="cardFront">Bitte Session starten</div>
+        <div class="card-face card-back">
+          <div class="translation d-flex align-items-center justify-content-center gap-2">
+            <span id="translation" class="fw-bold fs-3 text-primary">Übersetzung</span>
+            <i class="bi bi-volume-up-fill fs-3 text-primary" onclick="playTTS(currentVocab.translated_word)" title="Aussprache abspielen"></i>
+          </div>
+          <div class="answer-buttons">
+            <button class="btn btn-outline-success w-100" onclick="submitAnswer('known')">✅ Gewusst</button>
+            <button class="btn btn-outline-warning w-100" onclick="submitAnswer('partial')">➖ Teilweise gewusst</button>
+            <button class="btn btn-outline-danger w-100" onclick="submitAnswer('unknown')">❌ Nicht gewusst</button>
+          </div>
+        </div>
+      </div>
+      <button class="btn btn-success mt-3 w-100" onclick="flipCard()">Umdrehen</button>
+    </div>
+  </div>
+
+  <!-- JavaScript -->
+  <script>
+    let currentVocab = null;
+
+    function startSession() {
+      fetch("/start-session", { method: "POST" })
+        .then(res => res.json())
+        .then(() => {
+          loadNextVocab();
+          updateProgressBar();
+        });
+    }
+
+    function loadNextVocab() {
+      fetch("/get-learn-vocab")
+        .then(res => res.json())
+        .then(data => {
+          if (data.done) {
+            document.getElementById("cardFront").textContent = data.message || "🎉 Du bist fertig!";
+            document.getElementById("translation").textContent = "";
+            document.getElementById("flashcard").classList.remove("flipped");
+            return;
+          }
+
+          currentVocab = data;
+          document.getElementById("cardFront").textContent = data.original_word || "(Fehler)";
+          document.getElementById("translation").textContent = data.translated_word || "(Keine Übersetzung)";
+          document.getElementById("flashcard").classList.remove("flipped");
+          updateProgressBar();
+        })
+        .catch(() => {
+          document.getElementById("cardFront").textContent = "❌ Fehler beim Laden";
+        });
+    }
+
+    function submitAnswer(result) {
+      fetch("/submit-vocab-result", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id: currentVocab.id, result })
+      })
+      .then(res => res.json())
+      .then(data => {
+        if (data.goal_achieved) {
+          alert("🎯 Super! Du hast heute dein Lernziel erreicht.");
+        }
+        loadNextVocab();
+      });
+    }
+
+    function flipCard() {
+      document.getElementById("flashcard").classList.toggle("flipped");
+    }
+
+    function playTTS(text) {
+      fetch("/tts", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ text })
+      })
+      .then(res => res.blob())
+      .then(blob => {
+        const url = URL.createObjectURL(blob);
+        const audio = new Audio(url);
+        audio.play();
+      });
+    }
+
+    function updateProgressBar() {
+      fetch("/learning-progress")
+        .then(res => res.json())
+        .then(progress => {
+          document.getElementById("progressBar").style.width = progress.percent + "%";
+          document.getElementById("progressText").textContent =
+            `Fortschritt: ${progress.correct} von ${progress.total}`;
+        });
+    }
+  </script>
+</body>
+</html>
