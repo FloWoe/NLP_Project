@@ -47,15 +47,16 @@ def check_if_translation_used(user_sentence, expected_word):
 
 def evaluate_translation_with_gemini(source_sentence, user_translation, expected_word, target_lang):
     prompt = f"""
-Beurteile die folgende Benutzerübersetzung:
+Bewerte die folgende Benutzerübersetzung im Vergleich zum Ursprungssatz:
 
-🔹 Ursprungssatz: "{source_sentence}"
-🔸 Benutzerübersetzung: "{user_translation}"
-🔸 Erwartetes Wort: "{expected_word}"
+Ursprungssatz (Deutsch): "{source_sentence}"
+Benutzerübersetzung: "{user_translation}"
+Erwartetes Wort: "{expected_word}"
 
-Gib nur eine Verbesserung der Übersetzung zurück, falls nötig, als **ganzen Satz** auf {target_lang}. 
-Wenn die Benutzerübersetzung korrekt ist, antworte einfach mit "OK".
+Gib ausschließlich einen vollständigen, verbesserten Satz auf {target_lang} zurück – **ohne Einleitung, Kommentare oder Erklärungen**.  
+Wenn die Benutzerübersetzung bereits korrekt ist, gib nur exakt das Wort "OK" zurück – **ohne weitere Zusätze**.
 """
+
 
     try:
         response = model.generate_content(prompt)

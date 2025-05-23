@@ -1,14 +1,16 @@
 import whisper
 import os
 
-# Optional: Setze ein alternatives Cache-Verzeichnis für Whisper (vermeidet Pfadprobleme)
+# Whisper-Cache-Verzeichnis (optional)
 os.environ["XDG_CACHE_HOME"] = "C:/Users/noahs/whisper_cache"
 
-model = whisper.load_model("base")
+# Modell laden
+model = whisper.load_model("medium")  # oder "large"
 
 def transcribe_audio(audio_path):
     try:
-        result = model.transcribe(audio_path)
-        return result["text"]
+        result = model.transcribe(audio_path, fp16=False)
+        return result["text"]  # 🔹 Nur der reine Transkriptions-Text
     except Exception as e:
         return f"❌ Fehler bei Transkription: {str(e)}"
+

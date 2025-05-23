@@ -8,13 +8,24 @@ from speech_module.stt_whisper import transcribe_audio
 from speech_module.tts_Elevenlab import synthesize_speech
 from generate_text.text_generator import generate_text_by_language
 from generate_text.gap_generator import create_gap_text_with_gemini
-from Backend.vocab_db import init_db, VocabEntry, save_vocab, get_all_vocab, sqlite3, get_vocab_by_target_lang, search_vocab_advanced, init_result_table, VocabEntry, get_vocab_by_target_lang,save_quiz_result, get_all_results, get_summary_stats
+from learning.learning_engine import  get_next_vocab,update_learning_progress,check_daily_goal_achieved,get_session_progress,reset_session,  get_next_vocab, update_learning_progress,reset_session, check_daily_goal_achieved
+from Backend.vocab_db import init_db, init_learning_table, init_learning_progress_table, get_random_vocab_entry, VocabEntry, save_vocab, get_all_vocab, sqlite3, get_vocab_by_target_lang, search_vocab_advanced, init_result_table, VocabEntry, get_vocab_by_target_lang,save_quiz_result, get_all_results, get_summary_stats
 from vocab_quiz.quiz_engine import start_vocab_quiz, evaluate_translation_with_gemini
 import google.generativeai as genai
+from learning.learning_engine import (
+    get_next_vocab,
+    update_learning_progress,
+    check_daily_goal_achieved,
+    get_session_progress,
+    start_new_session,
+    reset_session
+)
 
   # ✅ Aktiviert CORS für alle Routen
 init_db()
 init_result_table()  # Quiz-Ergebnisse-Tabelle anlegen
+init_learning_table()
+init_learning_progress_table()
 
 template_path = os.path.join(os.path.dirname(__file__), "..", "templates")
 static_path = os.path.join(os.path.dirname(__file__), "..", "static")
@@ -38,6 +49,10 @@ def dashboard():
 @app.route("/favorite")
 def favorite():
     return render_template("favorite.html")
+
+@app.route("/lernen")
+def lernen():
+    return render_template("lernen.html")
 
 
 
@@ -461,6 +476,50 @@ def dashboard_kpis():
         "avg_score": round(avg_score),
         "last_score": round(last_score)
     })
+
+
+@app.route("/get-learn-vocab", methods=["GET"])
+def get_learn_vocab():
+    vocab = get_next_vocab()
+    if vocab is None:
+        return jsonify({"done": True, "message": "🎉 Du hast alle Vokabeln dieser Session gelernt!"})
+    return jsonify(vocab)
+
+@app.route("/submit-vocab-result", methods=["POST"])
+def submit_vocab_result():
+    data = request.get_json()
+    vocab_id = data.get("id")
+    result = data.get("result")
+
+    if not vocab_id or not result:
+        return jsonify({"status": "error", "message": "Ungültige Daten"}), 400
+
+    try:
+        update_learning_progress(vocab_id, result)
+        achieved = check_daily_goal_achieved()
+        return jsonify({"status": "success", "goal_achieved": achieved})
+    except Exception as e:
+        return jsonify({"status": "error", "message": str(e)}), 500
+
+
+@app.route("/reset-learn-session", methods=["POST"])
+def reset_learn_session():
+    reset_session()
+    return jsonify({"status": "reset"})
+
+@app.route("/start-session", methods=["POST"])
+def start_session():
+    try:
+        start_new_session()
+        return jsonify({"status": "success"})
+    except Exception as e:
+        return jsonify({"status": "error", "message": str(e)}), 500
+
+@app.route("/learning-progress", methods=["GET"])
+def learning_progress():
+    return jsonify(get_session_progress())
+
+
 
 
 
