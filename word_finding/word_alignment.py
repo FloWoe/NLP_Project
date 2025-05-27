@@ -36,12 +36,21 @@ nlp_models = {
 }
 
 stemmer_map = {
+    "ar": SnowballStemmer("arabic"),
+    "da": SnowballStemmer("danish"),
+    "nl": SnowballStemmer("dutch"),
     "en": SnowballStemmer("english"),
-    "de": SnowballStemmer("german"),
+    "fi": SnowballStemmer("finnish"),
     "fr": SnowballStemmer("french"),
-    "es": SnowballStemmer("spanish"),
+    "de": SnowballStemmer("german"),
+    "hu": SnowballStemmer("hungarian"),
     "it": SnowballStemmer("italian"),
-    "pt": SnowballStemmer("portuguese")
+    "no": SnowballStemmer("norwegian"),
+    "pt": SnowballStemmer("portuguese"),
+    "ro": SnowballStemmer("romanian"),
+    "ru": SnowballStemmer("russian"),
+    "es": SnowballStemmer("spanish"),
+    "sv": SnowballStemmer("swedish")
 }
 
 def stem(word: str, lang_code: str) -> str:
@@ -78,11 +87,29 @@ def find_all_forms_by_lemma(text: str, lemma: str, lang_code: str) -> list:
 def is_article_by_stem(word: str, lang_code: str) -> bool:
     known_article_stems = {
         "en": ["the", "a", "an"],
-        "de": ["der", "die", "das", "ein", "eine", "einer", "einen", "einem"],
+        "de": ["der", "die", "das", "dem", "den", "des", "ein", "eine", "einer", "einen", "einem"],
         "fr": ["le", "la", "les", "un", "une", "des"],
         "es": ["el", "la", "los", "las", "un", "una"],
         "it": ["il", "lo", "la", "i", "gli", "le", "un", "una"],
-        "pt": ["o", "a", "os", "as", "um", "uma"]
+        "pt": ["o", "a", "os", "as", "um", "uma"],
+        "nl": ["de", "het", "een"],
+        "sv": ["en", "ett", "den", "det", "de"],
+        "no": ["en", "ei", "et", "den", "det", "de"],
+        "da": ["en", "et", "den", "det", "de"],
+        "fi": ["se", "tämä", "nämä", "ne"],
+        "pl": [],
+        "cs": [],
+        "sk": [],
+        "hu": [],
+        "ro": ["un", "o", "niște", "cel", "cea", "cei", "cele"],
+        "bg": ["един", "една", "едно", "този", "тази", "тези"],
+        "sr": ["jedan", "jedna", "jedno", "taj", "ta", "to"],
+        "hr": ["jedan", "jedna", "jedno", "taj", "ta", "to"],
+        "sq": ["një", "ky", "kjo", "këta", "këto"],
+        "ru": ["этот", "эта", "это", "эти", "один", "одна", "одно"],
+        "uk": ["цей", "ця", "це", "ці", "один", "одна", "одне"],
+        "ja": [],
+        "el": ["ο", "η", "το", "οι", "τα", "ένας", "μία", "ένα"],
     }
     return stem(word, lang_code) in [stem(w, lang_code) for w in known_article_stems.get(lang_code, [])]
 
@@ -129,7 +156,6 @@ def find_matching_word_crosslingual(
         is_selected_article = is_article_by_stem(selected_word, source_lang)
         pos_tag = get_pos_tag(selected_word, source_lang, sentence_lang1)
 
-        # ✅ Neuer Prompt: Klare Trennung zwischen Formen & Phrasen
         prompt = (
             f"Ein Wort wurde markiert: „{selected_word}“\n"
             f"📘 Originalsatz ({source_lang}): \"{sentence_lang1}\"\n"
@@ -145,17 +171,14 @@ def find_matching_word_crosslingual(
         gemini_response = model.generate_content(prompt)
         matched_word_raw = gemini_response.text.strip()
 
-        # ✅ Verarbeitung: Unterscheide Phrasen vs. Wortformen
         if matched_word_raw.startswith('"') and matched_word_raw.endswith('"'):
             matched_word_list = [matched_word_raw.strip('"')]
         else:
             matched_word_list = [w.strip() for w in matched_word_raw.split(",") if w.strip()]
 
-        # ✅ Lemma-basierte Suche im Originaltext
         selected_lemma = lemmatize(selected_word, source_lang, sentence_lang1)
         original_matches = find_all_forms_by_lemma(sentence_lang1, selected_lemma, source_lang)
 
-        # ✅ Zieltext verarbeiten
         translated_matches = []
         matched_lemmas = []
         nlp_target = nlp_models.get(target_lang)
@@ -167,7 +190,6 @@ def find_matching_word_crosslingual(
             ]
         else:
             for phrase in matched_word_list:
-                # Ganze Phrase übernehmen, wenn vorhanden
                 if phrase.lower() in sentence_lang2.lower():
                     translated_matches.append(phrase)
                 else:
@@ -199,8 +221,6 @@ def find_matching_word_crosslingual(
 
     except Exception as e:
         return {"error": f"(Fehler bei Gemini: {e})"}
-
-
 
 
 

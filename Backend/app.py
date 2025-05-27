@@ -74,7 +74,6 @@ def translate():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
-
 @app.route("/match-word", methods=["POST"])
 def match_word():
     data = request.json
