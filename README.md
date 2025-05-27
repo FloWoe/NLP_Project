@@ -110,7 +110,7 @@ Whisper benötigt [ffmpeg](https://ffmpeg.org/), um Audio korrekt zu verarbeiten
 ### 5. API Key erstellen
 
 ggf. muss auch neue KPI Keys für die Speech-to-Text, Text-to-Speech, Gemini und der Google Cloud Translation API neue API Keys erstellt werden.
-
+Config.env erstellen für die einzelnen Keys
 ### 6. Anwendung starten
 ```bash
 python main.py
