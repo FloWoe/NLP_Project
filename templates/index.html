@@ -8,14 +8,20 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
 </head>
 <body>
-    <div class="sidebar">
-        <h2><i class="bi bi-list-stars"></i> Navigation</h2>
+    <!-- Sidebar -->
+    <div class="sidebar" id="sidebar">
         <ul>
-            <li><a href="{{ url_for('index') }}" class="active"> <i class="bi bi-house-door-fill"></i>Home</a></li>
-            <li><a href="/favorite"><i class="bi bi-star-fill"></i> Vokabeln</a></li>
-            <li><a href="/quiz"><i class="bi bi-patch-question-fill"></i> Vokabeltest</a></li>
-            <li><a href="/lernen"><i class="bi bi-book-half"></i> Lernen</a></li>
-            <li><a href="/dashboard"><i class="bi bi-bar-chart-line-fill"></i> Dashboard</a></li>
+        <li>
+            <a href="#" id="toggleSidebar" class="nav-link">
+            <i class="bi bi-list toggle-btn"></i> <span>Navigation</span>
+            </a>
+        </li>
+        <li><a href="/" class="active"><i class="bi bi-house-door-fill"></i> <span>Home</span></a></li>
+        <li><a href="/favorite"><i class="bi bi-star-fill"></i> <span>Vokabeln</span></a></li>
+        <li><a href="/quiz"><i class="bi bi-patch-question-fill"></i> <span>Vokabeltest</span></a></li>
+        <li><a href="/lernen"><i class="bi bi-book-half"></i> <span>Lernen</span></a></li>
+        <li><a href="/dashboard"><i class="bi bi-bar-chart-line-fill"></i> <span>Dashboard</span></a></li>
+        <li><a href="/hilfe"><i class="bi bi-info-circle-fill"></i> <span>Hilfe</span></a></li>
         </ul>
     </div>
 
@@ -707,5 +713,27 @@ function saveVocabEntry() {
 }
 
 </script>
+
+<!-- Sidebar-Toggle Script -->
+<script>
+const toggleBtn = document.getElementById('toggleSidebar');
+const sidebar = document.getElementById('sidebar');
+const container = document.querySelector('.container');
+
+// Zustand beim Laden wiederherstellen
+if (localStorage.getItem('sidebarCollapsed') === 'true') {
+    sidebar.classList.add('collapsed');
+    container.classList.add('collapsed');
+}
+
+// Klick: Zustand umschalten und speichern
+toggleBtn.addEventListener('click', function (e) {
+    e.preventDefault();
+    sidebar.classList.toggle('collapsed');
+    container.classList.toggle('collapsed');
+    localStorage.setItem('sidebarCollapsed', sidebar.classList.contains('collapsed'));
+});
+</script>
+
 </body>
 </html>

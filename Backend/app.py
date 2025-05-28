@@ -54,6 +54,9 @@ def favorite():
 def lernen():
     return render_template("lernen.html")
 
+@app.route("/hilfe")
+def hilfe():
+    return render_template("hilfe.html")
 
 
 
