@@ -5,7 +5,6 @@ body {
     padding: 0px;
 }
 
-
 h1 {
     text-align: center;
     color: #003f99;
@@ -17,28 +16,27 @@ h1 {
 
 .translator-boxes {
     display: flex;
+    flex-wrap: wrap;
     gap: 10px;
-    margin-bottom: 10px;
-}
-
-.text-box-wrapper {
-    position: relative;
     width: 100%;
-}
-
-.text-box {
+    justify-content: center;
+  }
+  .text-box-wrapper {
+    position: relative;
+    flex: 1 1 400px;
+    min-width: 300px;
+    max-width: 600px;
+  }
+  .text-box {
     width: 100%;
     height: 200px;
     padding: 10px;
-    font-size: 16px;
-    border: 1px solid #ccc;
     border-radius: 6px;
+    border: 1px solid #ccc;
     background-color: #fff;
     box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-    overflow-y: auto;
-    white-space: pre-wrap;
-    box-sizing: border-box;
-}
+    font-size: 16px;
+    overflow-y: auto;}
 
 .mic-button,
 .speaker-button {
@@ -157,44 +155,59 @@ h1 {
     font-size: 14px;
 }
 
+/* ========== SIDEBAR ========== */
 .sidebar {
     position: fixed;
     top: 0;
     left: 0;
     height: 100vh;
-    width: 250px;
-    background-color: #212529; /* dunkles Grau (Bootstrap Dark) */
-    padding: 20px;
+    width: 200px;
+    background-color: #212529;
+    padding: 0px;
     box-shadow: 2px 0 5px rgba(0,0,0,0.2);
     color: #fff;
+    transition: width 0.3s ease, padding 0.3s ease;
 }
 
+/* Navigationstitel (ausgeklappt) */
 .sidebar h2 {
+    padding: 20px;
     font-size: 18px;
     margin-bottom: 20px;
     color: #fff;
 }
 
+/* Liste */
 .sidebar ul {
-    list-style-type: none;
+    list-style: none;
     padding: 0;
+    margin: 0;
 }
 
 .sidebar ul li {
     margin: 10px 0;
 }
 
+/* Link-Styling (ausgeklappt) */
 .sidebar ul li a {
-    text-decoration: none;
-    color: #ccc;
-    font-size: 16px;
     display: flex;
     align-items: center;
+    height: 60px;
+    gap: 10px;
     padding: 10px;
-    border-radius: 5px;
-    transition: background 0.2s ease;
+    font-size: 16px;
+    color: #ccc;
+    text-decoration: none;
+    border-radius: 10px;
+    transition: background 0.2s ease, color 0.2s ease;
 }
 
+.sidebar ul li a i {
+    font-size: 1.2rem;
+    margin-right: 10px;
+}
+
+/* Hover & Active (ausgeklappt) */
 .sidebar ul li a:hover {
     background-color: #343a40;
     color: #fff;
@@ -205,36 +218,94 @@ h1 {
     color: #fff;
 }
 
-.sidebar ul li a i {
-    margin-right: 10px;
+/* Toggle-Button oben */
+.toggle-btn {
+    background: none;
+    border: none;
+    color: #fff;
     font-size: 1.2rem;
+    cursor: pointer;
+    padding: 0;
+    line-height: 1;
+    display: flex;
+    align-items: center;
 }
 
+/* ========== COLLAPSED STATE ========== */
+.sidebar.collapsed {
+    width: 60px !important;
+    padding: 0 !important;
+    overflow-x: hidden;
+}
+
+/* Alle Texte & Überschrift ausblenden */
+.sidebar.collapsed h2,
+.sidebar.collapsed ul li a span {
+    display: none;
+}
+
+/* Icons zentrieren, keine gaps/margins */
+.sidebar.collapsed ul li a {
+    position: relative;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 60px;
+    height: 60px;
+    padding: 0;
+    margin: 0;
+    gap: 0 !important;
+}
+
+.sidebar.collapsed ul li a i {
+    margin: 0 !important;
+}
+
+.sidebar.collapsed ul li a.active::before {
+    content: "";
+    position: absolute;
+    left: 0px;              /* mittig zwischen Rand (0) und Icon (30px) */
+    top: 50%;
+    transform: translateY(-50%);
+    width: 60px;             /* hinter das Icon */
+    height: 60px;
+    background-color: #0d6efd;
+    border-radius: 10px;
+    z-index: 0;
+}
+
+.sidebar.collapsed ul li a.active {
+  background: none !important;
+  position: relative;
+}
+
+.sidebar.collapsed ul li a.active i {
+  position: relative;
+  z-index: 2;
+}
+
+.sidebar.collapsed ul li a.active:hover {
+  background: none !important;
+}
+
+/* ========== CONTAINER ========== */
 .container {
-    margin-left: 270px; /* Platz für Sidebar */
+    margin-left: 270px;
     padding: 20px;
 }
 
-.translator-boxes {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 10px;
-    width: 100%;
-    justify-content: center;
-  }
-  .text-box-wrapper {
-    position: relative;
-    flex: 1 1 400px;
-    min-width: 300px;
-    max-width: 600px;
-  }
-  .text-box {
-    width: 100%;
-    height: 200px;
-    padding: 10px;
-    border-radius: 6px;
-    border: 1px solid #ccc;
-    background-color: #fff;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-    font-size: 16px;
-    overflow-y: auto;}
+.container.collapsed {
+    margin-left: 80px;
+    transition: margin-left 0.3s ease;
+}
+
+/* Nur im ausgeklappten Zustand */
+.sidebar:not(.collapsed) ul li a {
+    padding-left: 20px; /* oder z. B. 24px für etwas mehr Abstand */
+}
+
+.hilfe-tabelle td:first-child {
+  width: 300px;  /* Oder: 30% je nach Layout-Vorliebe */
+  white-space: nowrap;
+  vertical-align: top;
+}
