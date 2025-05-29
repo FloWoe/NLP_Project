@@ -1,6 +1,9 @@
 import sqlite3
 import random
+import os
 
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+DB_PATH = os.path.join(BASE_DIR, '..', 'Database', 'vocab.db')
 # 🔧 Konfiguration
 DAILY_GOAL = 5     # Tagesziel: 5 Vokabeln 2× richtig
 SESSION_LIMIT = 5 # Max. Vokabeln pro Session
@@ -14,7 +17,7 @@ session_stats = {
 
 # 🔹 Hilfsfunktion: Hole Vokabel per ID
 def fetch_vocab_by_id(vocab_id):
-    conn = sqlite3.connect("vocab.db")
+    conn = sqlite3.connect(DB_PATH)
     cursor = conn.cursor()
     cursor.execute("""
         SELECT original_word, translated_word
@@ -55,7 +58,7 @@ def get_next_vocab():
 
 # 🔹 Lernfortschritt aktualisieren + Verlauf speichern
 def update_learning_progress(vocab_id, result):
-    conn = sqlite3.connect("vocab.db")
+    conn = sqlite3.connect(DB_PATH)
     cursor = conn.cursor()
 
     # Aktuelle Streak-Werte lesen
@@ -123,7 +126,7 @@ def start_new_session():
     session_stats["repeat_queue"].clear()
     session_stats["session_vocab_ids"].clear()
 
-    conn = sqlite3.connect("vocab.db")
+    conn = sqlite3.connect(DB_PATH)
     cursor = conn.cursor()
     cursor.execute("""
         SELECT id FROM vocabulary

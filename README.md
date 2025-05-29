@@ -79,30 +79,9 @@ cd dein-repo
 
 ```bash
 pip install -r requirements.txt
-pip install flask flask-cors spacy nltk rapidfuzz scikit-learn openai google-generativeai pyttsx3 soundfile torch
-python -m spacy download de_core_news_sm
-python -m spacy download en_core_web_sm
-python -m spacy download fr_core_news_sm
-python -m spacy download es_core_news_sm
-python -m spacy download it_core_news_sm
-python -m spacy download pt_core_news_sm
-python -m spacy download el_core_news_sm
-python -m spacy download nl_core_news_sm
-python -m spacy download sv_core_news_sm
-python -m spacy download nb_core_news_sm
-python -m spacy download da_core_news_sm
-python -m spacy download fi_core_news_sm
-python -m spacy download pl_core_news_sm
-python -m spacy download ro_core_news_sm
-python -m spacy download ru_core_news_sm
-python -m spacy download uk_core_news_sm
-python -m spacy download hr_core_news_sm
-python -m spacy download ja_core_news_sm
-python -m spacy download xx_ent_wiki_sm
-pip install sudachipy sudachidict_core
-pip install elevenlabs
+phyton spacy_install.py
 pip install git+https://github.com/openai/whisper.git
-pip install python-dotenv
+
 ```
 
 ### 4. 🎙️  Whisper vorbereiten (Speech-to-Text)
@@ -132,8 +111,8 @@ Whisper benötigt [ffmpeg](https://ffmpeg.org/), um Audio korrekt zu verarbeiten
 
 ### 5. API Key erstellen
 
-ggf. muss auch neue KPI Keys für die Speech-to-Text, Text-to-Speech, Gemini und der Google Cloud Translation API neue API Keys erstellt werden.
-Config.env erstellen für die einzelnen Keys
+API Keys müssen für Google Translation Cloud, Elevenlabs API und Gemini erstellt werden
+Passe diese example.env an und benenne sie zu config.env um. Füge dann die API Keys ein.
 ### 6. Anwendung starten
 ```bash
 python main.py

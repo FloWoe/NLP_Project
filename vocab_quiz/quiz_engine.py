@@ -1,6 +1,13 @@
 import sqlite3
 import google.generativeai as genai
 from configuration.config import GEMINI_API_KEY
+import os
+
+import os
+
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+DB_PATH = os.path.join(BASE_DIR, '..', 'Database', 'vocab.db')
+
 
 # 🔹 Gemini konfigurieren
 genai.configure(api_key=GEMINI_API_KEY)
@@ -9,7 +16,7 @@ model = genai.GenerativeModel("models/gemini-2.0-flash")
 
 # 🔹 Vokabeln abrufen – mit optionalem Sprachfilter (z. B. "en")
 def fetch_vocab_from_db(limit=5, lang_code=None):
-    conn = sqlite3.connect("vocab.db")
+    conn = sqlite3.connect(DB_PATH)
     cursor = conn.cursor()
 
     if lang_code:
