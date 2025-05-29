@@ -4,6 +4,11 @@ from rapidfuzz import fuzz, process
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
 from rapidfuzz.distance import Levenshtein
+import os
+
+
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+DB_PATH = os.path.join(BASE_DIR, '..', 'Database', 'vocab.db')
 
 # 🔹 Datenmodell
 @dataclass
@@ -17,7 +22,7 @@ class VocabEntry:
 
 # 🔹 Initialisieren
 def init_db():
-    conn = sqlite3.connect("vocab.db")
+    conn = sqlite3.connect(DB_PATH)
     cursor = conn.cursor()
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS vocabulary (
@@ -36,7 +41,7 @@ def init_db():
 
 # 🔹 Speichern
 def save_vocab(entry: VocabEntry):
-    conn = sqlite3.connect("vocab.db")
+    conn = sqlite3.connect(DB_PATH)
     cursor = conn.cursor()
     cursor.execute("""
         INSERT INTO vocabulary (
@@ -55,7 +60,7 @@ def save_vocab(entry: VocabEntry):
 # 🔹 Alle Vokabeln abrufen
 # 🔹 Vokabeln nach Zielsprache filtern
 def get_vocab_by_target_lang(lang_code: str):
-    conn = sqlite3.connect("vocab.db")
+    conn = sqlite3.connect(DB_PATH)
     cursor = conn.cursor()
     cursor.execute("""
         SELECT id, original_word, translated_word, source_lang, target_lang,
@@ -69,7 +74,7 @@ def get_vocab_by_target_lang(lang_code: str):
     return rows
 
 def get_all_vocab():
-    conn = sqlite3.connect("vocab.db")
+    conn = sqlite3.connect(DB_PATH)
     cursor = conn.cursor()
     cursor.execute("""
         SELECT id, original_word, translated_word, source_lang, target_lang,
@@ -103,9 +108,8 @@ from rapidfuzz import fuzz
 
 def search_vocab_advanced(query: str, top_k=15):
     from rapidfuzz.distance import Levenshtein
-
     query_lower = query.lower()
-    conn = sqlite3.connect("vocab.db")
+    conn = sqlite3.connect(DB_PATH)
     cursor = conn.cursor()
     cursor.execute("""
         SELECT id, original_word, translated_word, original_sentence, translated_sentence
@@ -144,7 +148,7 @@ def search_vocab_advanced(query: str, top_k=15):
 
 
 def get_vocab_for_quiz():
-    conn = sqlite3.connect("vocab.db")
+    conn = sqlite3.connect(DB_PATH)
     cursor = conn.cursor()
     cursor.execute("""
         SELECT id, original_word, translated_word, source_lang, target_lang, 
@@ -158,7 +162,7 @@ def get_vocab_for_quiz():
     return rows
 
 def init_result_table():
-    conn = sqlite3.connect("vocab.db")
+    conn = sqlite3.connect(DB_PATH)
     cursor = conn.cursor()
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS quiz_results (
@@ -175,7 +179,7 @@ def init_result_table():
     conn.close()
 
 def save_quiz_result(language: str, vocab_score: int, sentence_score: int, total_score: int, passed: bool):
-    conn = sqlite3.connect("vocab.db")
+    conn = sqlite3.connect(DB_PATH)
     cursor = conn.cursor()
     cursor.execute("""
         INSERT INTO quiz_results (
@@ -186,7 +190,7 @@ def save_quiz_result(language: str, vocab_score: int, sentence_score: int, total
     conn.close()
 
 def get_all_results():
-    conn = sqlite3.connect("vocab.db")
+    conn = sqlite3.connect(DB_PATH)
     cursor = conn.cursor()
     cursor.execute("""
         SELECT language, vocab_score, sentence_score, total_score, passed, timestamp
@@ -198,7 +202,7 @@ def get_all_results():
     return rows
 
 def get_summary_stats():
-    conn = sqlite3.connect("vocab.db")
+    conn = sqlite3.connect(DB_PATH)
     cursor = conn.cursor()
     cursor.execute("SELECT COUNT(*) FROM quiz_results")
     total_tests = cursor.fetchone()[0]
@@ -214,7 +218,7 @@ def get_summary_stats():
     }
     
 def init_learning_table():
-    conn = sqlite3.connect("vocab.db")
+    conn = sqlite3.connect(DB_PATH)
     cursor = conn.cursor()
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS vocab_learning_results (
@@ -228,7 +232,7 @@ def init_learning_table():
     conn.close()
 
 def init_learning_progress_table():
-    conn = sqlite3.connect("vocab.db")
+    conn = sqlite3.connect(DB_PATH)
     cursor = conn.cursor()
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS vocab_learning_progress (

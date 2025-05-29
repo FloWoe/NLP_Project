@@ -9,7 +9,7 @@ from speech_module.tts_Elevenlab import synthesize_speech
 from generate_text.text_generator import generate_text_by_language
 from generate_text.gap_generator import create_gap_text_with_gemini
 from learning.learning_engine import  get_next_vocab,update_learning_progress,check_daily_goal_achieved,get_session_progress,reset_session,  get_next_vocab, update_learning_progress,reset_session, check_daily_goal_achieved
-from Backend.vocab_db import init_db, init_learning_table, init_learning_progress_table, get_random_vocab_entry, VocabEntry, save_vocab, get_all_vocab, sqlite3, get_vocab_by_target_lang, search_vocab_advanced, init_result_table, VocabEntry, get_vocab_by_target_lang,save_quiz_result, get_all_results, get_summary_stats
+from vocab_storage.vocab_db import init_db, init_learning_table, init_learning_progress_table, get_random_vocab_entry, VocabEntry, save_vocab, get_all_vocab, sqlite3, get_vocab_by_target_lang, search_vocab_advanced, init_result_table, VocabEntry, get_vocab_by_target_lang,save_quiz_result, get_all_results, get_summary_stats
 from vocab_quiz.quiz_engine import start_vocab_quiz, evaluate_translation_with_gemini
 import google.generativeai as genai
 from learning.learning_engine import (
@@ -29,6 +29,10 @@ init_learning_progress_table()
 
 template_path = os.path.join(os.path.dirname(__file__), "..", "templates")
 static_path = os.path.join(os.path.dirname(__file__), "..", "static")
+
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+DB_PATH = os.path.join(BASE_DIR, "..", "Database", "vocab.db")
+
 
 app = Flask(__name__, template_folder=template_path, static_folder=static_path)
 CORS(app)
@@ -265,7 +269,7 @@ def get_vocab():
 @app.route("/delete-vocab/<int:vocab_id>", methods=["DELETE"])
 def delete_vocab(vocab_id):
     try:
-        conn = sqlite3.connect("vocab.db")
+        conn = sqlite3.connect(DB_PATH)
         cursor = conn.cursor()
         cursor.execute("DELETE FROM vocabulary WHERE id = ?", (vocab_id,))
         conn.commit()
@@ -277,7 +281,7 @@ def delete_vocab(vocab_id):
 @app.route("/delete-all-vocab", methods=["DELETE"])
 def delete_all_vocab():
     try:
-        conn = sqlite3.connect("vocab.db")
+        conn = sqlite3.connect(DB_PATH)
         cursor = conn.cursor()
         cursor.execute("DELETE FROM vocabulary")
         conn.commit()
@@ -289,7 +293,7 @@ def delete_all_vocab():
 @app.route("/get-vocab-by-lang")
 def get_vocab_by_lang():
     lang = request.args.get("lang", "")
-    from Backend.vocab_db import get_vocab_by_target_lang
+    from vocab_storage.vocab_db import get_vocab_by_target_lang
     results = get_vocab_by_target_lang(lang)
     return jsonify([
         {
@@ -336,7 +340,7 @@ def suggest_vocab():
     if not query or len(query) < 2:
         return jsonify([])
 
-    conn = sqlite3.connect("vocab.db")
+    conn = sqlite3.connect(DB_PATH)
     cursor = conn.cursor()
     cursor.execute("""
         SELECT DISTINCT original_word FROM vocabulary
@@ -411,7 +415,7 @@ def evaluate_answer():
 @app.route("/vocab-language-stats")
 def vocab_language_stats():
     import sqlite3
-    conn = sqlite3.connect("vocab.db")
+    conn = sqlite3.connect(DB_PATH)
     cursor = conn.cursor()
     cursor.execute("""
         SELECT target_lang, COUNT(*) 
@@ -443,7 +447,7 @@ def save_result():
 
 @app.route("/quiz-result-summary")
 def quiz_result_summary():
-    from Backend.vocab_db import get_summary_stats
+    from vocab_storage.vocab_db import get_summary_stats
     stats = get_summary_stats()
     failed_tests = stats["total_tests"] - stats["passed_tests"]
     return jsonify({
@@ -454,7 +458,7 @@ def quiz_result_summary():
 @app.route("/dashboard-kpis")
 def dashboard_kpis():
     import sqlite3
-    conn = sqlite3.connect("vocab.db")
+    conn = sqlite3.connect(DB_PATH)
     cursor = conn.cursor()
 
     cursor.execute("SELECT COUNT(*) FROM quiz_results")

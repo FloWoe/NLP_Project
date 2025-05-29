@@ -1,46 +1,5 @@
 # API Keys
-configuration/config.env
-.env
+#configuration/config.env
 
-# Python: Bytecode und Caches
-__pycache__/
-*.py[cod]
-*.so
-
-# Virtuelle Umgebung (lokal erzeugt, nicht pushen!)
-venv/
-.venv/
-
-# macOS
-.DS_Store
-
-# Windows
-Thumbs.db
-
-# Logdateien
-*.log
-
-# Datenbanken
-*.db
-*.sqlite3
-
-# Audio-, Video- oder Modelldateien (optional)
-*.mp3
-*.wav
-*.webm
-*.ogg
-
-# Editor-Einstellungen (optional ignorieren)
-.vscode/
-
-# Jupyter Notebooks (optional)
-.ipynb_checkpoints/
-
-# Sonstige temporäre Dateien
-*.bak
-*.swp
-
-**/whisper_cache/
-*.pt
-
-**/whisper_cache/whisper/medium.pt
+# Mp3 nicht hochladen
+Backend/output.mp3
