@@ -245,3 +245,50 @@ def init_learning_progress_table():
     conn.commit()
     conn.close()
 
+def get_learning_activity_over_time():
+    conn = sqlite3.connect(DB_PATH)
+    cursor = conn.cursor()
+    cursor.execute("""
+        SELECT DATE(timestamp) AS date, COUNT(*) 
+        FROM vocab_learning_results 
+        GROUP BY DATE(timestamp)
+        ORDER BY DATE(timestamp)
+    """)
+    rows = cursor.fetchall()
+    conn.close()
+
+    return {
+        "labels": [row[0] for row in rows],
+        "counts": [row[1] for row in rows]
+    }
+
+def get_language_levels():
+    LEVELS = [("A1", 500), ("A2", 1000), ("B1", 2000), ("B2", 4000), ("C1", 8000), ("C2", 12000)]
+    
+    conn = sqlite3.connect(DB_PATH)
+    cursor = conn.cursor()
+    cursor.execute("SELECT target_lang, COUNT(*) FROM vocabulary GROUP BY target_lang")
+    rows = cursor.fetchall()
+    conn.close()
+
+    result = []
+    for lang, count in rows:
+        level = "-"
+        remaining = LEVELS[0][1]  # Bis A1
+        for i, (lvl, threshold) in enumerate(LEVELS):
+            if count < threshold:
+                level = "-" if i == 0 else LEVELS[i - 1][0]
+                remaining = threshold - count
+                break
+        else:
+            level = LEVELS[-1][0]
+            remaining = 0
+
+        result.append({
+            "language": lang,
+            "level": level,
+            "remaining": remaining
+        })
+
+    return result
+
