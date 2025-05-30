@@ -11,12 +11,23 @@
     body {
       background-color: #f8f9fa;
     }
+    #languageSelectLabel {
+      margin-bottom: 2px !important;
+    }
     .chart-card {
       background: white;
       border-radius: 10px;
       box-shadow: 0 2px 8px rgba(0,0,0,0.1);
       padding: 20px;
       margin-bottom: 30px;
+      height: 350px;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-start;  /* 👈 NICHT mehr auseinanderziehen */
+    }
+
+    .chart-card label {
+      margin-bottom: 2px !important;
     }
     canvas {
       max-height: 300px;
@@ -87,6 +98,27 @@
       <div class="col-md-6">
         <div class="chart-card">
           <canvas id="resultChart"></canvas>
+        </div>
+      </div>
+
+      <!-- Lernaktivität -->
+      <div class="col-md-6">
+        <div class="chart-card">
+          <canvas id="activityChart"></canvas>
+        </div>
+      </div>
+
+      <div class="col-md-6">
+        <div class="chart-card">
+          <div class="text-center mb-4" style="font-size: 12px; font-weight: 600; color: #6c757d;">
+            Sprachniveau je Sprache
+          </div>
+          <div style="margin-bottom: 10px; font-weight: 500; font-size: 0.95rem;"><strong>Sprache auswählen:</strong></div>
+          <select id="languageSelect" class="form-select mb-2"></select>
+
+          
+          <p class="mt-4"><strong>Aktuelles Niveau:</strong> <span id="currentLevel">–</span></p>
+          <p><Fehlende Wörter> <span id="remainingWords">–</span></p>
         </div>
       </div>
     </div>
@@ -194,7 +226,88 @@
           }
         });
       });
+
+    // 📅 Lernaktivität über Zeit (Line)
+    fetch("/learning-activity-over-time")
+      .then(res => res.json())
+      .then(data => {
+        const ctx = document.getElementById("activityChart").getContext("2d");
+        new Chart(ctx, {
+          type: 'line',
+          data: {
+            labels: data.labels,
+            datasets: [{
+              label: 'Gelernte Vokabeln pro Tag',
+              data: data.counts,
+              borderColor: '#0d6efd',
+              backgroundColor: 'rgba(13, 110, 253, 0.1)',
+              tension: 0.3,
+              fill: true
+            }]
+          },
+          options: {
+            responsive: true,
+            plugins: {
+              legend: { position: 'top' },
+              title: {
+                display: true,
+                text: 'Lernaktivität (alle Sprachen)'
+              }
+            },
+            scales: {
+              y: {
+                beginAtZero: true
+              }
+            }
+          }
+        });
+      });
+
+    fetch("/language-level-stats")
+      .then(res => res.json())
+      .then(data => {
+        const select = document.getElementById("languageSelect");
+        const level = document.getElementById("currentLevel");
+        const remaining = document.getElementById("remainingWords");
+
+        // Dropdown-Optionen erzeugen
+        data.forEach(entry => {
+          const option = document.createElement("option");
+          option.value = entry.language;
+          option.text = entry.language.toUpperCase();
+          select.appendChild(option);
+        });
+
+        // Anzeige initialisieren
+        function updateDisplay(language) {
+          const selected = data.find(e => e.language === language);
+          level.innerText = selected.level;
+          let nextLevel = "–";
+          const levelOrder = ["-", "A1", "A2", "B1", "B2", "C1", "C2"];
+          const currentIndex = levelOrder.indexOf(selected.level);
+          if (currentIndex >= 0 && currentIndex < levelOrder.length - 1) {
+            nextLevel = levelOrder[currentIndex + 1];
+          }
+          if (selected.remaining > 0) {
+            remaining.innerHTML = `Fehlende Vokabeln bis <strong>Niveau ${nextLevel}</strong>: ${selected.remaining}`;
+          } else {
+            remaining.innerHTML = `<strong>🎉 Maximales Niveau erreicht</strong>`;
+          }
+        }
+
+        // Beim Wechsel aktualisieren
+        select.addEventListener("change", () => {
+          updateDisplay(select.value);
+        });
+
+        // Erste Option vorauswählen
+        if (data.length > 0) {
+          select.value = data[0].language;
+          updateDisplay(data[0].language);
+        }
+      });
+
+
   </script>
 </body>
 </html>
-

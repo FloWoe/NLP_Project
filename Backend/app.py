@@ -9,7 +9,7 @@ from speech_module.tts_Elevenlab import synthesize_speech
 from generate_text.text_generator import generate_text_by_language
 from generate_text.gap_generator import create_gap_text_with_gemini
 from learning.learning_engine import  get_next_vocab,update_learning_progress,check_daily_goal_achieved,get_session_progress,reset_session,  get_next_vocab, update_learning_progress,reset_session, check_daily_goal_achieved
-from vocab_storage.vocab_db import init_db, init_learning_table, init_learning_progress_table, get_random_vocab_entry, VocabEntry, save_vocab, get_all_vocab, sqlite3, get_vocab_by_target_lang, search_vocab_advanced, init_result_table, VocabEntry, get_vocab_by_target_lang,save_quiz_result, get_all_results, get_summary_stats
+from vocab_storage.vocab_db import init_db, init_learning_table, init_learning_progress_table, get_learning_activity_over_time, get_random_vocab_entry, VocabEntry, save_vocab, get_all_vocab, sqlite3, get_vocab_by_target_lang, search_vocab_advanced, init_result_table, VocabEntry, get_vocab_by_target_lang,save_quiz_result, get_all_results, get_summary_stats
 from vocab_quiz.quiz_engine import start_vocab_quiz, evaluate_translation_with_gemini
 import google.generativeai as genai
 from learning.learning_engine import (
@@ -36,6 +36,19 @@ DB_PATH = os.path.join(BASE_DIR, "..", "Database", "vocab.db")
 
 app = Flask(__name__, template_folder=template_path, static_folder=static_path)
 CORS(app)
+
+from vocab_storage.vocab_db import get_learning_activity_over_time
+
+@app.route("/learning-activity-over-time")
+def learning_activity():
+    data = get_learning_activity_over_time()
+    return jsonify(data)
+
+from vocab_storage.vocab_db import get_language_levels
+
+@app.route("/language-level-stats")
+def language_level_stats():
+    return jsonify(get_language_levels())
 
 @app.route("/")
 def index():
