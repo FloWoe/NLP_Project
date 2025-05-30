@@ -249,13 +249,20 @@ def get_learning_activity_over_time():
     conn = sqlite3.connect(DB_PATH)
     cursor = conn.cursor()
     cursor.execute("""
-        SELECT DATE(timestamp) AS date, COUNT(*) 
-        FROM vocab_learning_results 
-        GROUP BY DATE(timestamp)
-        ORDER BY DATE(timestamp)
+        SELECT date, COUNT(*) FROM (
+            SELECT DISTINCT DATE(timestamp) AS date, vocab_id
+            FROM vocab_learning_results
+        )
+        GROUP BY date
+        ORDER BY date
     """)
     rows = cursor.fetchall()
     conn.close()
+
+    return {
+        "labels": [row[0] for row in rows],
+        "counts": [row[1] for row in rows]
+    }
 
     return {
         "labels": [row[0] for row in rows],
