@@ -1,5 +1,6 @@
 import spacy
 import nltk
+from nltk.stem.snowball import SnowballStemmer
 
 # Lade NLTK-Tokenizer-Ressourcen
 nltk.download('punkt')
