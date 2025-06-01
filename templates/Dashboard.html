@@ -11,9 +11,6 @@
     body {
       background-color: #f8f9fa;
     }
-    #languageSelectLabel {
-      margin-bottom: 2px !important;
-    }
     .chart-card {
       background: white;
       border-radius: 10px;
@@ -23,14 +20,22 @@
       height: 350px;
       display: flex;
       flex-direction: column;
-      justify-content: flex-start;  /* 👈 NICHT mehr auseinanderziehen */
-    }
-
-    .chart-card label {
-      margin-bottom: 2px !important;
+      justify-content: flex-start;
     }
     canvas {
       max-height: 300px;
+    }
+    /* Style für den Logout Button Container */
+    .header-actions {
+        position: absolute;
+        top: 1rem;
+        right: 1rem;
+        display: flex;
+        align-items: center;
+    }
+    .username-display {
+        margin-right: 1rem;
+        font-weight: 500;
     }
   </style>
 </head>
@@ -44,17 +49,28 @@
           <i class="bi bi-list toggle-btn"></i> <span>Navigation</span>
         </a>
       </li>
-      <li><a href="/"><i class="bi bi-house-door-fill"></i> <span>Home</span></a></li>
-      <li><a href="/favorite"><i class="bi bi-star-fill"></i> <span>Vokabeln</span></a></li>
-      <li><a href="/quiz"><i class="bi bi-patch-question-fill"></i> <span>Vokabeltest</span></a></li>
-      <li><a href="/lernen"><i class="bi bi-book-half"></i> <span>Lernen</span></a></li>
-      <li><a href="/dashboard" class="active"><i class="bi bi-bar-chart-line-fill"></i> <span>Dashboard</span></a></li>
-      <li><a href="/hilfe"><i class="bi bi-info-circle-fill"></i> <span>Hilfe</span></a></li>
+      <li><a href="{{ url_for('index') }}"><i class="bi bi-house-door-fill"></i> <span>Home</span></a></li>
+      <li><a href="{{ url_for('favorite') }}"><i class="bi bi-star-fill"></i> <span>Vokabeln</span></a></li>
+      <li><a href="{{ url_for('quiz_page') }}"><i class="bi bi-patch-question-fill"></i> <span>Vokabeltest</span></a></li>
+      <li><a href="{{ url_for('lernen') }}"><i class="bi bi-book-half"></i> <span>Lernen</span></a></li>
+      <li><a href="{{ url_for('dashboard') }}" class="active"><i class="bi bi-bar-chart-line-fill"></i> <span>Dashboard</span></a></li>
+      <li><a href="{{ url_for('hilfe') }}"><i class="bi bi-info-circle-fill"></i> <span>Hilfe</span></a></li>
     </ul>
   </div>
 
   <!-- Dashboard-Inhalt -->
-  <div class="container mt-5">
+  <div class="container mt-5 position-relative"> <!-- position-relative für den Logout Button -->
+
+    <!-- NEU: Header-Aktionen mit Benutzername und Logout-Button -->
+    <div class="header-actions">
+        {% if current_user.is_authenticated %}
+            <span class="username-display">Hallo, {{ current_user.username }}!</span>
+            <a href="{{ url_for('logout') }}" id="logoutButtonDashboard" class="btn btn-sm btn-outline-danger">
+                <i class="bi bi-box-arrow-right"></i> Logout
+            </a>
+        {% endif %}
+    </div>
+
     <h1 class="text-center mb-5"><i class="bi bi-graph-up-arrow"></i> Lernfortschritt</h1>
 
     <!-- KPI-Karten -->
@@ -93,21 +109,18 @@
           <canvas id="langChart"></canvas>
         </div>
       </div>
-
       <!-- Kreisdiagramm -->
       <div class="col-md-6">
         <div class="chart-card">
           <canvas id="resultChart"></canvas>
         </div>
       </div>
-
       <!-- Lernaktivität -->
       <div class="col-md-6">
         <div class="chart-card">
           <canvas id="activityChart"></canvas>
         </div>
       </div>
-
       <div class="col-md-6">
         <div class="chart-card">
           <div class="text-center mb-4" style="font-size: 12px; font-weight: 600; color: #6c757d;">
@@ -115,10 +128,8 @@
           </div>
           <div style="margin-bottom: 10px; font-weight: 500; font-size: 0.95rem;"><strong>Sprache auswählen:</strong></div>
           <select id="languageSelect" class="form-select mb-2"></select>
-
-          
           <p class="mt-4"><strong>Aktuelles Niveau:</strong> <span id="currentLevel">–</span></p>
-          <p><Fehlende Wörter> <span id="remainingWords">–</span></p>
+          <p>Fehlende Wörter bis zum nächsten Niveau: <span id="remainingWords">–</span></p> <!-- Text leicht angepasst -->
         </div>
       </div>
     </div>
@@ -129,28 +140,34 @@
 
   <!-- Sidebar Toggle Script -->
   <script>
+    // ... (Dein bestehendes Sidebar Toggle Script bleibt hier) ...
     const toggleBtn = document.getElementById('toggleSidebar');
     const sidebar = document.getElementById('sidebar');
-    const container = document.querySelector('.container');
+    const container = document.querySelector('.container'); // Hauptcontainer
 
-    // Zustand beim Laden wiederherstellen
     if (localStorage.getItem('sidebarCollapsed') === 'true') {
       sidebar.classList.add('collapsed');
-      container.classList.add('collapsed');
+      if (container) container.style.marginLeft = '60px'; // Adjust main content margin
+    } else {
+      if (container) container.style.marginLeft = '250px'; // Default margin
     }
 
-    // Klick: Zustand umschalten und speichern
-    toggleBtn.addEventListener('click', function (e) {
-      e.preventDefault();
-      sidebar.classList.toggle('collapsed');
-      container.classList.toggle('collapsed');
-      localStorage.setItem('sidebarCollapsed', sidebar.classList.contains('collapsed'));
-    });
+    if(toggleBtn) {
+        toggleBtn.addEventListener('click', function (e) {
+          e.preventDefault();
+          sidebar.classList.toggle('collapsed');
+          const isCollapsed = sidebar.classList.contains('collapsed');
+          localStorage.setItem('sidebarCollapsed', isCollapsed);
+          if (container) container.style.marginLeft = isCollapsed ? '60px' : '250px';
+        });
+    }
   </script>
 
   <script>
-    // 📊 KPI-Daten laden
-    fetch("/dashboard-kpis")
+    // 📊 Chart- und KPI-Lade-Skripte (Dein bestehendes Skript bleibt hier) ...
+    // ... (KPI laden, langChart, resultChart, activityChart, languageLevelStats) ...
+     // 📊 KPI-Daten laden
+    fetch("{{ url_for('dashboard_kpis_route') }}") // Korrekter Routenname
       .then(res => res.json())
       .then(data => {
         document.getElementById("kpi-tests").innerText = data.total_tests;
@@ -161,7 +178,7 @@
       .catch(err => console.error("❌ Fehler beim Laden der KPIs:", err));
 
     // 📊 Vokabeln pro Sprache (Bar)
-    fetch("/vocab-language-stats")
+    fetch("{{ url_for('vocab_language_stats_route') }}") // Korrekter Routenname
       .then(res => res.json())
       .then(data => {
         const ctx = document.getElementById("langChart").getContext("2d");
@@ -175,60 +192,32 @@
               backgroundColor: '#4e79a7'
             }]
           },
-          options: {
-            responsive: true,
-            plugins: {
-              legend: { display: false },
-              title: {
-                display: true,
-                text: 'Vokabelanzahl pro Sprache'
-              }
-            },
-            scales: {
-              y: {
-                beginAtZero: true,
-                ticks: { stepSize: 1 }
-              }
-            }
-          }
+          options: { responsive: true, plugins: { legend: { display: false }, title: { display: true, text: 'Vokabelanzahl pro Sprache'}}, scales: { y: { beginAtZero: true, ticks: { stepSize: 1 }}}}
         });
       });
 
     // ✅ Testergebnisse (Doughnut)
-    fetch("/quiz-result-summary")
+    fetch("{{ url_for('quiz_result_summary_route') }}") // Korrekter Routenname
       .then(res => res.json())
       .then(data => {
-        if (data.passed + data.failed === 0) {
+        if (data.passed === 0 && data.failed === 0) { // Sicherere Prüfung
           document.getElementById("resultChart").parentElement.innerHTML =
-            '<div class="alert alert-warning text-center">Noch keine Testergebnisse vorhanden.</div>';
+            '<div class="alert alert-info text-center mt-4">Noch keine Testergebnisse vorhanden.</div>'; // Info statt Warning
           return;
         }
-
         const ctx = document.getElementById("resultChart").getContext("2d");
         new Chart(ctx, {
           type: 'doughnut',
           data: {
             labels: ['Bestanden', 'Nicht bestanden'],
-            datasets: [{
-              data: [data.passed, data.failed],
-              backgroundColor: ['#28a745', '#dc3545']
-            }]
+            datasets: [{ data: [data.passed, data.failed], backgroundColor: ['#28a745', '#dc3545']}]
           },
-          options: {
-            responsive: true,
-            plugins: {
-              legend: { position: 'bottom' },
-              title: {
-                display: true,
-                text: 'Testergebnisse: Bestanden vs. Nicht bestanden'
-              }
-            }
-          }
+          options: { responsive: true, plugins: { legend: { position: 'bottom' }, title: { display: true, text: 'Testergebnisse: Bestanden vs. Nicht bestanden'}}}
         });
       });
 
     // 📅 Lernaktivität über Zeit (Line)
-    fetch("/learning-activity-over-time")
+    fetch("{{ url_for('learning_activity_route') }}") // Korrekter Routenname
       .then(res => res.json())
       .then(data => {
         const ctx = document.getElementById("activityChart").getContext("2d");
@@ -245,69 +234,79 @@
               fill: true
             }]
           },
-          options: {
-            responsive: true,
-            plugins: {
-              legend: { position: 'top' },
-              title: {
-                display: true,
-                text: 'Lernaktivität (alle Sprachen)'
-              }
-            },
-            scales: {
-              y: {
-                beginAtZero: true
-              }
-            }
-          }
+          options: { responsive: true, plugins: { legend: { position: 'top' }, title: { display: true, text: 'Lernaktivität (alle Sprachen)'}}, scales: {y: {beginAtZero: true }}}
         });
       });
 
-    fetch("/language-level-stats")
+    // Sprachlevel-Stats
+    fetch("{{ url_for('language_level_stats_route') }}") // Korrekter Routenname
       .then(res => res.json())
       .then(data => {
         const select = document.getElementById("languageSelect");
         const level = document.getElementById("currentLevel");
         const remaining = document.getElementById("remainingWords");
 
-        // Dropdown-Optionen erzeugen
+        if (!data || data.length === 0) {
+            select.parentElement.innerHTML = '<p class="text-muted text-center">Keine Sprachlevel-Daten vorhanden.</p>';
+            return;
+        }
+
         data.forEach(entry => {
           const option = document.createElement("option");
           option.value = entry.language;
-          option.text = entry.language.toUpperCase();
+          option.text = entry.language ? entry.language.toUpperCase() : "Unbekannt";
           select.appendChild(option);
         });
 
-        // Anzeige initialisieren
         function updateDisplay(language) {
           const selected = data.find(e => e.language === language);
-          level.innerText = selected.level;
-          let nextLevel = "–";
+          if (!selected) return;
+          level.innerText = selected.level || "-";
+          let nextLevelText = "–";
           const levelOrder = ["-", "A1", "A2", "B1", "B2", "C1", "C2"];
-          const currentIndex = levelOrder.indexOf(selected.level);
+          const currentIndex = levelOrder.indexOf(selected.level || "-");
+
           if (currentIndex >= 0 && currentIndex < levelOrder.length - 1) {
-            nextLevel = levelOrder[currentIndex + 1];
+            nextLevelText = levelOrder[currentIndex + 1];
           }
           if (selected.remaining > 0) {
-            remaining.innerHTML = `Fehlende Vokabeln bis <strong>Niveau ${nextLevel}</strong>: ${selected.remaining}`;
+            remaining.innerHTML = `<strong>Niveau ${nextLevelText}</strong>: ${selected.remaining}`;
+          } else if (selected.level === "C2") {
+            remaining.innerHTML = `<strong>🎉 Höchstes Niveau erreicht!</strong>`;
           } else {
-            remaining.innerHTML = `<strong>🎉 Maximales Niveau erreicht</strong>`;
+            remaining.innerHTML = `N/A`;
           }
         }
 
-        // Beim Wechsel aktualisieren
-        select.addEventListener("change", () => {
-          updateDisplay(select.value);
-        });
+        select.addEventListener("change", () => updateDisplay(select.value));
 
-        // Erste Option vorauswählen
         if (data.length > 0) {
           select.value = data[0].language;
           updateDisplay(data[0].language);
         }
       });
 
-
+    // NEU: JavaScript für den Logout-Button auf dem Dashboard
+    const logoutButtonDashboard = document.getElementById('logoutButtonDashboard');
+    if (logoutButtonDashboard) {
+        logoutButtonDashboard.addEventListener('click', function(event) {
+            event.preventDefault(); // Verhindert das Standardverhalten des Links
+            fetch("{{ url_for('logout') }}") // Ruft die Logout-Route im Backend auf
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === 'success') {
+                        // alert(data.message); // Optionale Benachrichtigung
+                        window.location.href = "{{ url_for('login') }}"; // Weiterleitung zur Login-Seite
+                    } else {
+                        alert('Logout fehlgeschlagen. Bitte versuche es erneut.');
+                    }
+                })
+                .catch(error => {
+                    console.error('Fehler beim Logout:', error);
+                    alert('Ein Fehler ist beim Logout aufgetreten.');
+                });
+        });
+    }
   </script>
 </body>
 </html>
