@@ -2,210 +2,397 @@
 <html lang="de">
 <head>
   <meta charset="UTF-8">
-  <title>Hilfe</title>
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <title>Hilfe - Vokabeltrainer</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
-  <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
-</head>
-<body>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <!-- Kein Link zu styles.css, da Styles inline sind -->
+  <style>
+    :root {
+        --apple-font: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen-Sans, Ubuntu, Cantarell, "Helvetica Neue", sans-serif;
+        --primary-text-color: #1d1d1f;
+        --secondary-text-color: #6e6e73;
+        --background-body-color: #f5f5f7;
+        --background-content-color: #ffffff;
+        --border-color-light: #e5e5e7;
+        --accent-color-blue: #007aff;
+        --accent-color-red: #ff3b30; /* Hinzugefügt für Logout etc. */
+        --radius-large: 18px;
+        --radius-medium: 12px;
+        --radius-small: 8px;
+        --shadow-card: 0 5px 20px rgba(0,0,0,0.07);
+    }
+    body {
+      font-family: var(--apple-font);
+      background-color: var(--background-body-color);
+      color: var(--primary-text-color);
+      margin: 0;
+      display: flex;
+    }
+    /* --- Sidebar Styles (kopiert) --- */
+    .sidebar {
+        width: 250px; min-width: 250px; height: 100vh; position: fixed; left: 0; top: 0;
+        background-color: var(--background-content-color); border-right: 1px solid var(--border-color-light);
+        padding: 1.5rem 0; transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        z-index: 1030; display: flex; flex-direction: column; overflow-x: hidden;
+    }
+    .sidebar.collapsed { width: 75px; min-width: 75px; }
+    .sidebar ul { list-style-type: none; padding: 0 1rem; margin: 0; flex-grow: 1; }
+    .sidebar ul li a {
+        display: flex; align-items: center; padding: 12px 15px; margin-bottom: 6px;
+        text-decoration: none; color: var(--primary-text-color); font-weight: 500;
+        border-radius: var(--radius-medium); transition: background-color 0.15s ease-out, color 0.15s ease-out;
+        white-space: nowrap;
+    }
+    .sidebar ul li a .bi {
+        margin-right: 16px; font-size: 1.3rem; min-width: 28px; text-align: center;
+        color: var(--secondary-text-color); transition: color 0.15s ease-out;
+    }
+    .sidebar.collapsed ul li a .bi { margin-right: 0; }
+    .sidebar ul li a:hover { background-color: #f0f0f2; }
+    .sidebar ul li a.active { background-color: var(--accent-color-blue); color: white; }
+    .sidebar ul li a.active .bi { color: white; }
+    .sidebar .sidebar-text { opacity: 1; transition: opacity 0.1s ease-out 0.05s; }
+    .sidebar.collapsed .sidebar-text { opacity: 0; pointer-events: none; display: none; }
+    .sidebar-footer { padding: 1rem 1.5rem; margin-top: auto; border-top: 1px solid var(--border-color-light); }
+    .btn-logout-sidebar {
+        display: flex; align-items: center; width: 100%; padding: 10px 15px;
+        background-color: transparent; color: var(--accent-color-red);
+        border: 1px solid transparent; border-radius: var(--radius-medium);
+        font-weight: 500; text-align: left; transition: background-color 0.15s ease-out, border-color 0.15s ease-out;
+        cursor: pointer;
+    }
+    .btn-logout-sidebar:hover { background-color: rgba(255, 59, 48, 0.1); border-color: rgba(255, 59, 48, 0.2); }
+    .btn-logout-sidebar .bi { margin-right: 16px; font-size: 1.3rem; }
+    .sidebar.collapsed .btn-logout-sidebar { justify-content: center; padding: 10px; }
+    .sidebar.collapsed .btn-logout-sidebar .sidebar-text { display: none; }
+    .sidebar.collapsed .btn-logout-sidebar .bi { margin-right: 0; }
 
-  <!-- Sidebar -->
-  <div class="sidebar" id="sidebar">
-    <ul>
-      <li>
-        <a href="#" id="toggleSidebar" class="nav-link">
-          <i class="bi bi-list toggle-btn"></i> <span>Navigation</span>
-        </a>
-      </li>
-      <li><a href="/"><i class="bi bi-house-door-fill"></i> <span>Home</span></a></li>
-      <li><a href="/favorite"><i class="bi bi-star-fill"></i> <span>Vokabeln</span></a></li>
-      <li><a href="/quiz"><i class="bi bi-patch-question-fill"></i> <span>Vokabeltest</span></a></li>
-      <li><a href="/lernen"><i class="bi bi-book-half"></i> <span>Lernen</span></a></li>
-      <li><a href="/dashboard"><i class="bi bi-bar-chart-line-fill"></i> <span>Dashboard</span></a></li>
-      <li><a href="/hilfe" class="active"><i class="bi bi-info-circle-fill"></i> <span>Hilfe</span></a></li>
-    </ul>
-  </div>
+    /* --- Hauptinhaltsbereich Styles --- */
+    .main-content-wrapper {
+        margin-left: 250px; padding: 2.5rem; width: calc(100% - 250px);
+        transition: margin-left 0.3s cubic-bezier(0.4, 0, 0.2, 1), width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        height: 100vh; overflow-y: auto;
+    }
+    .main-content-wrapper.collapsed { margin-left: 75px; width: calc(100% - 75px); }
 
-  <!-- Inhalt -->
-  <div class="container">
-    <h1 class="text-center mb-5"><i class="bi bi-info-circle-fill"></i> Hilfe</h1>
+    .page-header-bar {
+        display: flex; justify-content: space-between; align-items: center;
+        margin-bottom: 1.5rem; /* Etwas weniger als beim Dashboard */
+        padding-bottom: 1rem; border-bottom: 1px solid var(--border-color-light);
+    }
+    .page-header-bar h1 {
+        font-size: 2rem; font-weight: 600; margin: 0; display: flex; align-items: center;
+    }
+    .page-header-bar h1 .bi { margin-right: 0.8rem; color: var(--accent-color-blue); font-size: 1.7rem;}
 
-    <p class="lead">Hier findest du eine Übersicht aller Funktionen des Vokabeltrainers – von der Übersetzung bis zur verwendeten Technik.</p>
-
-    <div class="my-5"></div>
-
-    <!-- Abschnitt: Vokabeltrainer -->
-    <h2><i class="bi bi-translate"></i> <a href="/" class="text-decoration-none">Vokabeltrainer</a></h2>
-    <table class="table table-bordered hilfe-tabelle bg-white shadow-sm">
-      <tbody>
-        <tr>
-          <td>🔤 <strong>Text übersetzen</strong></td>
-          <td>Gib einen Text ein, wähle eine Zielsprache, und erhalte eine sofortige Übersetzung.</td>
-        </tr>
-        <tr>
-          <td>🎙️ <strong>Spracheingabe</strong></td>
-          <td>Nutze das Mikrofon, um gesprochene Sprache in Text umzuwandeln (Whisper AI).</td>
-        </tr>
-        <tr>
-          <td>🔊 <strong>Vorlesen</strong></td>
-          <td>Lass dir Quell- oder Zieltext mit natürlicher Stimme vorlesen (Google/ElevenLabs).</td>
-        </tr>
-        <tr>
-          <td>🖱️ <strong>Markieren & erklären</strong></td>
-          <td>Klicke ein Wort an, um es hervorzuheben und eine KI-basierte Erklärung zu erhalten.</td>
-        </tr>
-        <tr>
-          <td>✨ <strong>Lerntext generieren</strong></td>
-          <td>Erzeuge automatisch einen passenden Übungstext (leicht, mittel, schwer) mit KI.</td>
-        </tr>
-        <tr>
-          <td>✍️ <strong>Lückentext erstellen</strong></td>
-          <td>Ersetze ein sinnvolles Wort im Zieltext durch eine Lücke und trainiere gezielt.</td>
-        </tr>
-        <tr>
-          <td>🔄 <strong>Sprachen tauschen</strong></td>
-          <td>Vertausche Eingabe- und Zielsprache mit einem Klick (↔ Symbol).</td>
-        </tr>
-        <tr>
-          <td>🧹 <strong>Markierungen zurücksetzen</strong></td>
-          <td>Entfernt alle Hervorhebungen und Icons aus dem Textbereich.</td>
-        </tr>
-      </tbody>
-    </table>
-
-    <div class="my-5"></div>
-
-    <!-- Abschnitt: Vokabeln -->
-    <h2><i class="bi bi-star-fill"></i> <a href="/favorite" class="text-decoration-none">Vokabeln</a></h2>
-    <table class="table table-bordered hilfe-tabelle bg-white shadow-sm">
-      <tbody>
-        <tr>
-          <td>⭐ <strong>Vokabel speichern</strong></td>
-          <td>Speichere markierte Wörter in deiner persönlichen Vokabelliste.</td>
-        </tr>
-        <tr>
-          <td>📚 <strong>Vokabeln durchsuchen</strong></td>
-          <td>Nutze die Suchleiste mit Auto-Vervollständigung, um Wörter schnell zu finden.</td>
-        </tr>
-        <tr>
-          <td>🗑️ <strong>Vokabeln löschen</strong></td>
-          <td>Lösche einzelne oder alle gespeicherten Vokabeln mit einem Klick.</td>
-        </tr>
-      </tbody>
-    </table>
-
-    <div class="my-5"></div>
-
-    <!-- Abschnitt: Vokabeltest -->
-    <h2><i class="bi bi-patch-question-fill"></i> <a href="/quiz" class="text-decoration-none">Vokabeltest</a></h2>
-    <table class="table table-bordered hilfe-tabelle bg-white shadow-sm">
-      <tbody>
-        <tr>
-          <td>🧠 <strong>Vokabeln übersetzen</strong></td>
-          <td>Teste deine gespeicherten Wörter durch manuelle Eingabe der Übersetzung.</td>
-        </tr>
-        <tr>
-          <td>🌐 <strong>Satzübersetzung</strong></td>
-          <td>Übersetze Beispielsätze – die KI bewertet deine Antwort und gibt Feedback.</td>
-        </tr>
-        <tr>
-          <td>📈 <strong>Testergebnisse</strong></td>
-          <td>Deine Ergebnisse werden gespeichert und ins Dashboard übernommen.</td>
-        </tr>
-      </tbody>
-    </table>
-
-    <div class="my-5"></div>
-
-    <!-- Abschnitt: Lernen -->
-    <h2><i class="bi bi-book-half"></i> <a href="/lernen" class="text-decoration-none">Lernen</a></h2>
-    <table class="table table-bordered hilfe-tabelle bg-white shadow-sm">
-      <tbody>
-        <tr>
-          <td>📖 <strong>Karteikarten</strong></td>
-          <td>Im Lernmodus arbeitest du mit digitalen Karten, um deine Vokabeln zu wiederholen.</td>
-        </tr>
-        <tr>
-          <td>✅ <strong>Antwort bewerten</strong></td>
-          <td>Bewerte selbst, ob du das Wort kanntest, teilweise oder nicht – das beeinflusst deinen Fortschritt.</td>
-        </tr>
-        <tr>
-          <td>📅 <strong>Tagesziel</strong></td>
-          <td>Jeden Tag kannst du dir ein Ziel setzen – erreiche es für deinen Lernfortschritt.</td>
-        </tr>
-      </tbody>
-    </table>
-
-    <div class="my-5"></div>
-
-    <!-- Abschnitt: Dashboard -->
-    <h2><i class="bi bi-bar-chart-line"></i> <a href="/dashboard" class="text-decoration-none">Dashboard</a></h2>
-    <table class="table table-bordered hilfe-tabelle bg-white shadow-sm">
-      <tbody>
-        <tr>
-          <td>📊 <strong>Fortschrittsübersicht</strong></td>
-          <td>Das Dashboard zeigt dir Diagramme zu deinem Lernverhalten und deinen Quiz-Ergebnissen.</td>
-        </tr>
-        <tr>
-          <td>📈 <strong>Statistiken</strong></td>
-          <td>Verfolge deine Testergebnisse nach Sprache, Erfolgsquote und mehr.</td>
-        </tr>
-      </tbody>
-    </table>
-
-    <div class="my-5"></div>
-    <!-- Abschnitt: Technik & KI -->
-    <h2><i class="bi bi-cpu"></i> Technik & KI</h2>
-    <table class="table table-bordered hilfe-tabelle bg-white shadow-sm">
-      <tbody>
-        <tr>
-          <td>🤖 <strong>Künstliche Intelligenz</strong></td>
-          <td>Texte, Erklärungen und Lückentexte werden mit Google Gemini generiert.</td>
-        </tr>
-        <tr>
-          <td>🧠 <strong>Sprachverarbeitung</strong></td>
-          <td>Wortanalyse und -zuordnung erfolgen mit spaCy, Levenshtein & RapidFuzz.</td>
-        </tr>
-        <tr>
-          <td>🎧 <strong>Spracheingabe</strong></td>
-          <td>Whisper-Modelle von OpenAI transkribieren gesprochene Sprache.</td>
-        </tr>
-        <tr>
-          <td>📣 <strong>Vorlesen</strong></td>
-          <td>Text-to-Speech erfolgt über Google TTS oder ElevenLabs API.</td>
-        </tr>
-        <tr>
-          <td>🔐 <strong>API-Schlüssel</strong></td>
-          <td>Stelle sicher, dass deine API-Schlüssel sicher z. B. in einer `.env`-Datei gespeichert werden.</td>
-        </tr>
-      </tbody>
-    </table>
-
-    <div class="text-center mt-5">
-      <a href="/" class="btn btn-primary btn-lg"><i class="bi bi-arrow-left-circle"></i> Zur Startseite</a>
-    </div>
-  </div>
-
-  <!-- Sidebar-Toggle Script -->
-  <script>
-    const toggleBtn = document.getElementById('toggleSidebar');
-    const sidebar = document.getElementById('sidebar');
-    const container = document.querySelector('.container');
-
-    // Zustand beim Laden wiederherstellen
-    if (localStorage.getItem('sidebarCollapsed') === 'true') {
-      sidebar.classList.add('collapsed');
-      container.classList.add('collapsed');
+    /* Spezifische Styles für hilfe.html */
+    .lead-text {
+        font-size: 1.1rem; /* Etwas kleiner als Dashboard Lead */
+        color: var(--secondary-text-color);
+        margin-bottom: 2.5rem; /* Mehr Abstand nach Einleitung */
+        line-height: 1.65;
+    }
+    .help-section {
+        margin-bottom: 2.5rem;
+    }
+    .help-section-title { /* Ersetzt h2 für mehr Kontrolle */
+        font-size: 1.5rem; /* Kompakter */
+        font-weight: 600;
+        color: var(--primary-text-color);
+        margin-bottom: 1.25rem;
+        display: flex;
+        align-items: center;
+        /* border-bottom: 1px solid var(--border-color-light); Optional */
+        /* padding-bottom: 0.5rem; */
+    }
+    .help-section-title .bi {
+        margin-right: 0.75rem;
+        color: var(--secondary-text-color); /* Dezentere Icons für Titel */
+        font-size: 1.4rem;
+    }
+    .help-section-title a {
+        color: inherit;
+        text-decoration: none;
+        transition: color 0.2s ease;
+    }
+    .help-section-title a:hover {
+        color: var(--accent-color-blue);
     }
 
-    // Klick: Zustand umschalten und speichern
-    toggleBtn.addEventListener('click', function (e) {
-      e.preventDefault();
-      sidebar.classList.toggle('collapsed');
-      container.classList.toggle('collapsed');
-      localStorage.setItem('sidebarCollapsed', sidebar.classList.contains('collapsed'));
-    });
-  </script>
+    .help-content-card { /* Ersetzt .help-table und .help-card */
+        background-color: var(--background-content-color);
+        border-radius: var(--radius-large);
+        box-shadow: var(--shadow-card);
+        padding: 0.5rem; /* Kleines äußeres Padding */
+    }
+    .help-item {
+        display: flex;
+        align-items: flex-start; /* Besser für mehrzeiligen Text */
+        padding: 1rem 1.25rem;
+        border-bottom: 1px solid #f0f0f0; /* Subtile Trennlinie */
+    }
+    .help-item:last-child {
+        border-bottom: none;
+    }
+    .help-item-icon {
+        font-size: 1.25rem;
+        color: var(--accent-color-blue);
+        margin-right: 1rem;
+        min-width: 24px; /* Für Ausrichtung */
+        margin-top: 0.15rem; /* Leichte Anpassung */
+    }
+    .help-item-text strong {
+        display: block;
+        font-weight: 500; /* Weniger fett als 600 */
+        color: var(--primary-text-color);
+        margin-bottom: 0.2rem;
+        font-size: 0.95rem;
+    }
+    .help-item-text span {
+        color: var(--secondary-text-color);
+        line-height: 1.6;
+        font-size: 0.85rem;
+    }
 
+    /* Button am Ende */
+    .btn-apple-primary {
+        background-color: var(--accent-color-blue); color: white; border: none;
+        padding: 10px 22px; border-radius: var(--radius-medium); font-weight: 500;
+        cursor: pointer; transition: background-color 0.2s ease-in-out;
+        display: inline-flex; align-items: center; justify-content: center;
+        font-size: 0.95rem; text-decoration: none;
+    }
+    .btn-apple-primary:hover { background-color: #0056b3; color: white; }
+    .btn-apple-primary .bi { margin-right: 8px; }
+
+  </style>
+</head>
+<body>
+  <!-- Sidebar -->
+  <nav class="sidebar" id="sidebar">
+    <ul>
+      <li><a href="#" id="toggleSidebar"><i class="bi bi-list"></i> <span class="sidebar-text">Navigation</span></a></li>
+      <li><a href="{{ url_for('index') }}" class="{{ 'active' if request.endpoint == 'index' else '' }}"><i class="bi bi-translate"></i> <span class="sidebar-text">Übersetzer</span></a></li>
+      {% if current_user.is_authenticated %}
+      <li><a href="{{ url_for('favorite') }}" class="{{ 'active' if request.endpoint == 'favorite' else '' }}"><i class="bi bi-star"></i> <span class="sidebar-text">Vokabeln</span></a></li>
+      <li><a href="{{ url_for('quiz_page') }}" class="{{ 'active' if request.endpoint == 'quiz_page' else '' }}"><i class="bi bi-clipboard-check"></i> <span class="sidebar-text">Vokabeltest</span></a></li>
+      <li><a href="{{ url_for('lernen') }}" class="{{ 'active' if request.endpoint == 'lernen' else '' }}"><i class="bi bi-book"></i> <span class="sidebar-text">Lernen</span></a></li>
+      <li><a href="{{ url_for('dashboard') }}" class="{{ 'active' if request.endpoint == 'dashboard' else '' }}"><i class="bi bi-grid-1x2"></i> <span class="sidebar-text">Dashboard</span></a></li>
+      {% endif %}
+      <li><a href="{{ url_for('hilfe') }}" class="active"><i class="bi bi-question-circle-fill"></i> <span class="sidebar-text">Hilfe</span></a></li>
+       <li class="mt-auto pt-3 border-top sidebar-bottom-links">
+        {% if current_user.is_authenticated %}
+            <a href="#" class="disabled-link"><i class="bi bi-person-circle"></i> <span class="sidebar-text">{{ current_user.username }}</span></a>
+            <a href="{{ url_for('logout') }}" id="logoutButtonSidebar" class="btn-logout-sidebar">
+                <i class="bi bi-box-arrow-left"></i><span class="sidebar-text">Logout</span>
+            </a>
+        {% else %}
+            <a href="{{ url_for('login') }}"><i class="bi bi-box-arrow-in-right"></i> <span class="sidebar-text">Login</span></a>
+            <a href="{{ url_for('register') }}"><i class="bi bi-person-plus"></i> <span class="sidebar-text">Registrieren</span></a>
+        {% endif %}
+        </li>
+    </ul>
+  </nav>
+
+  <!-- Hauptinhalt -->
+  <main class="main-content-wrapper" id="mainContent">
+    <div class="container-fluid no-padding">
+        <header class="page-header-bar">
+          <h1><i class="bi bi-question-diamond-fill"></i>Hilfe & Informationen</h1>
+        </header>
+
+        <p class="lead-text">
+            Willkommen! Hier findest du eine Übersicht der Funktionen und Technologien unseres Vokabeltrainers.
+        </p>
+
+        <!-- Abschnitte als Karten -->
+        <section class="help-section">
+          <div class="help-section-title"><i class="bi bi-translate"></i> <a href="{{ url_for('index') }}">Vokabeltrainer (Home)</a></div>
+          <div class="help-content-card">
+            <div class="help-item">
+                <i class="bi bi-fonts help-item-icon"></i>
+                <div class="help-item-text"><strong>Text übersetzen</strong><span>Gib Text ein, wähle Sprachen und erhalte dynamische Übersetzungen.</span></div>
+            </div>
+            <div class="help-item">
+                <i class="bi bi-mic-fill help-item-icon"></i>
+                <div class="help-item-text"><strong>Spracheingabe</strong><span>Nutze das Mikrofon für Sprache-zu-Text (OpenAI Whisper).</span></div>
+            </div>
+            <div class="help-item">
+                <i class="bi bi-volume-up-fill help-item-icon"></i>
+                <div class="help-item-text"><strong>Vorlesen</strong><span>Lass dir Texte mit natürlicher Stimme vorlesen (ElevenLabs).</span></div>
+            </div>
+            <div class="help-item">
+                <i class="bi bi-lightbulb-fill help-item-icon"></i>
+                <div class="help-item-text"><strong>Wortanalyse & Erklärung</strong><span>Markiere Wörter für paarweises Highlighting und KI-basierte Erklärungen.</span></div>
+            </div>
+            <div class="help-item">
+                <i class="bi bi-star-half help-item-icon"></i>
+                <div class="help-item-text"><strong>Vokabel speichern</strong><span>Füge markierte Wortpaare und Sätze zu deiner persönlichen Liste hinzu.</span></div>
+            </div>
+            <div class="help-item">
+                <i class="bi bi-magic help-item-icon"></i>
+                <div class="help-item-text"><strong>Lerntext generieren</strong><span>Erzeuge KI-generierte Übungstexte in verschiedenen Schwierigkeitsgraden.</span></div>
+            </div>
+            <div class="help-item">
+                <i class="bi bi-pencil-square help-item-icon"></i>
+                <div class="help-item-text"><strong>Lückentext erstellen</strong><span>Verwandle Übersetzungen in interaktive Lückentextübungen.</span></div>
+            </div>
+            <div class="help-item">
+                <i class="bi bi-arrow-left-right help-item-icon"></i>
+                <div class="help-item-text"><strong>Sprachen tauschen</strong><span>Wechsle Ausgangs- und Zielsprache sowie Textinhalte mit einem Klick.</span></div>
+            </div>
+             <div class="help-item">
+                <i class="bi bi-arrow-counterclockwise help-item-icon"></i>
+                <div class="help-item-text"><strong>Markierungen zurücksetzen</strong><span>Entferne alle Highlights und Info-Icons aus den Textfeldern.</span></div>
+            </div>
+          </div>
+        </section>
+
+        <section class="help-section">
+          <div class="help-section-title"><i class="bi bi-star-fill"></i> <a href="{{ url_for('favorite') }}">Meine Vokabeln</a></div>
+          <div class="help-content-card">
+             <div class="help-item">
+                <i class="bi bi-search help-item-icon"></i>
+                <div class="help-item-text"><strong>Suchen & Filtern</strong><span>Durchsuche deine Vokabeln und filtere sie nach Zielsprache.</span></div>
+            </div>
+             <div class="help-item">
+                <i class="bi bi-volume-up-fill help-item-icon"></i>
+                <div class="help-item-text"><strong>Aussprache</strong><span>Lass dir die Übersetzung deiner gespeicherten Vokabeln vorlesen.</span></div>
+            </div>
+             <div class="help-item">
+                <i class="bi bi-trash3-fill help-item-icon"></i>
+                <div class="help-item-text"><strong>Löschen</strong><span>Entferne einzelne oder alle deine Vokabeln.</span></div>
+            </div>
+          </div>
+        </section>
+        
+        <section class="help-section">
+          <div class="help-section-title"><i class="bi bi-clipboard-check-fill"></i> <a href="{{ url_for('quiz_page') }}">Vokabeltest</a></div>
+           <div class="help-content-card">
+             <div class="help-item">
+                <i class="bi bi-pencil-fill help-item-icon"></i>
+                <div class="help-item-text"><strong>Wörter & Sätze üben</strong><span>Teste dein Wissen mit Vokabelabfragen und Satzübersetzungen.</span></div>
+            </div>
+             <div class="help-item">
+                <i class="bi bi-robot help-item-icon"></i>
+                <div class="help-item-text"><strong>KI-Bewertung</strong><span>Erhalte Feedback zu deinen Satzübersetzungen durch eine KI.</span></div>
+            </div>
+             <div class="help-item">
+                <i class="bi bi-graph-up-arrow help-item-icon"></i>
+                <div class="help-item-text"><strong>Ergebnisse speichern</strong><span>Dein Quizfortschritt wird gespeichert und im Dashboard angezeigt.</span></div>
+            </div>
+          </div>
+        </section>
+
+        <section class="help-section">
+          <div class="help-section-title"><i class="bi bi-book-fill"></i> <a href="{{ url_for('lernen') }}">Lernmodus</a></div>
+           <div class="help-content-card">
+             <div class="help-item">
+                <i class="bi bi-stack help-item-icon"></i>
+                <div class="help-item-text"><strong>Digitale Karteikarten</strong><span>Wiederhole Vokabeln im bewährten Karteikartenformat.</span></div>
+            </div>
+             <div class="help-item">
+                <i class="bi bi-check2-circle help-item-icon"></i>
+                <div class="help-item-text"><strong>Selbsteinschätzung (SRS)</strong><span>Bewerte dein Wissen, um den Lernalgorithmus zu steuern.</span></div>
+            </div>
+             <div class="help-item">
+                <i class="bi bi-bullseye help-item-icon"></i>
+                <div class="help-item-text"><strong>Tagesziel & Fortschritt</strong><span>Verfolge deinen Lernfortschritt und erreiche tägliche Ziele.</span></div>
+            </div>
+          </div>
+        </section>
+
+         <section class="help-section">
+          <div class="help-section-title"><i class="bi bi-grid-1x2-fill"></i> <a href="{{ url_for('dashboard') }}">Dashboard</a></div>
+           <div class="help-content-card">
+             <div class="help-item">
+                <i class="bi bi-pie-chart-fill help-item-icon"></i>
+                <div class="help-item-text"><strong>Statistiken & KPIs</strong><span>Visuelle Übersicht deiner Lernaktivitäten und Erfolge.</span></div>
+            </div>
+          </div>
+        </section>
+
+        <section class="help-section">
+          <div class="help-section-title"><i class="bi bi-cpu-fill"></i> Technik & KI</div>
+           <div class="help-content-card">
+             <div class="help-item">
+                <i class="bi bi-gem help-item-icon"></i><div class="help-item-text"><strong>Google Gemini</strong><span>Für Textgenerierung, Erklärungen und Lückentexte.</span></div>
+            </div>
+            <div class="help-item">
+                <i class="bi bi-lungs-fill help-item-icon"></i><div class="help-item-text"><strong>OpenAI Whisper</strong><span>Für Sprache-zu-Text-Umwandlung.</span></div>
+            </div>
+            <div class="help-item">
+                <i class="bi bi-broadcast help-item-icon"></i><div class="help-item-text"><strong>ElevenLabs TTS</strong><span>Für natürliche Sprachausgabe.</span></div>
+            </div>
+            <div class="help-item">
+                <i class="bi bi-code-slash help-item-icon"></i><div class="help-item-text"><strong>Python & Flask</strong><span>Backend-Logik der Anwendung.</span></div>
+            </div>
+            <div class="help-item">
+                <i class="bi bi-database-fill-gear help-item-icon"></i><div class="help-item-text"><strong>SQLite</strong><span>Datenbank für Vokabeln und Fortschritte.</span></div>
+            </div>
+            <div class="help-item">
+                <i class="bi bi-filetype-html help-item-icon"></i><div class="help-item-text"><strong>HTML, CSS, JavaScript</strong><span>Frontend-Technologien.</span></div>
+            </div>
+          </div>
+        </section>
+
+        <div class="text-center mt-4 mb-5"> <!-- Mehr Abstand unten -->
+          <a href="{{ url_for('index') }}" class="btn-apple-primary"><i class="bi bi-house-door-fill"></i> Zurück zum Übersetzer</a>
+        </div>
+    </div> <!-- Ende .container-fluid -->
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script>
+    // Sidebar Toggle Script (kopiert von Dashboard.html)
+    const toggleSidebarBtnJS = document.getElementById('toggleSidebar');
+    const sidebarElementJS = document.getElementById('sidebar');
+    const mainContentElementJS = document.getElementById('mainContent'); // Korrekte ID hier
+
+    function setSidebarStateJS(collapsed) {
+        const sidebarTexts = sidebarElementJS.querySelectorAll('.sidebar-text');
+        if (collapsed) {
+            sidebarElementJS.classList.add('collapsed');
+            if(mainContentElementJS) mainContentElementJS.classList.add('collapsed');
+            sidebarTexts.forEach(span => span.style.display = 'none');
+        } else {
+            sidebarElementJS.classList.remove('collapsed');
+            if(mainContentElementJS) mainContentElementJS.classList.remove('collapsed');
+            sidebarTexts.forEach(span => span.style.display = 'inline');
+        }
+    }
+    const isSidebarCollapsedStored = localStorage.getItem('sidebarCollapsed') === 'true';
+    setSidebarStateJS(isSidebarCollapsedStored);
+
+    if (toggleSidebarBtnJS) {
+        toggleSidebarBtnJS.addEventListener('click', function (e) {
+          e.preventDefault();
+          const shouldBeCollapsedJS = !sidebarElementJS.classList.contains('collapsed');
+          localStorage.setItem('sidebarCollapsed', shouldBeCollapsedJS);
+          setSidebarStateJS(shouldBeCollapsedJS);
+        });
+    }
+
+    // Logout Button Handler (Sidebar)
+    const logoutButtonSidebarJS = document.getElementById('logoutButtonSidebar');
+    if (logoutButtonSidebarJS) {
+        logoutButtonSidebarJS.addEventListener('click', function(event) {
+            event.preventDefault();
+            fetch("{{ url_for('logout') }}")
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === 'success') {
+                        window.location.href = "{{ url_for('login') }}";
+                    } else {
+                        alert('Logout fehlgeschlagen: ' + (data.message || 'Unbekannter Fehler'));
+                    }
+                })
+                .catch(error => {
+                    console.error('Logout Fehler:', error);
+                    alert('Fehler beim Logout.');
+                });
+        });
+    }
+  </script>
 </body>
 </html>

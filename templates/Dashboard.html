@@ -1,313 +1,491 @@
 <!DOCTYPE html>
 <html lang="de">
 <head>
-  <meta charset="UTF-8">
-  <title>Vokabel-Dashboard</title>
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
-  <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <style>
-    body {
-      background-color: #f8f9fa;
-    }
-    #languageSelectLabel {
-      margin-bottom: 2px !important;
-    }
-    .chart-card {
-      background: white;
-      border-radius: 10px;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-      padding: 20px;
-      margin-bottom: 30px;
-      height: 350px;
-      display: flex;
-      flex-direction: column;
-      justify-content: flex-start;  /* 👈 NICHT mehr auseinanderziehen */
-    }
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - Vokabeltrainer</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
+    <style>
+        :root {
+            --apple-font: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
+            --primary-text-color: #1d1d1f;
+            --secondary-text-color: #6e6e73;
+            --background-body-color: #f5f5f7;
+            --background-content-color: #ffffff;
+            --border-color-light: #e5e5e7;
+            --accent-color-blue: #007aff;
+            --accent-color-green: #34c759;
+            --accent-color-red: #ff3b30;
+            --accent-color-yellow: #ffcc00;
+            --radius-large: 18px;
+            --radius-medium: 12px;
+            --radius-small: 8px;
+            --shadow-card: 0 5px 20px rgba(0,0,0,0.07);
+        }
 
-    .chart-card label {
-      margin-bottom: 2px !important;
-    }
-    canvas {
-      max-height: 300px;
-    }
+        body {
+            font-family: var(--apple-font);
+            background-color: var(--background-body-color);
+            color: var(--primary-text-color);
+            margin: 0;
+            padding: 0;
+            display: flex;
+            min-height: 100vh;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+
+        /* --- Sidebar Styles (Angepasst für EXAKTE Übereinstimmung) --- */
+        .sidebar {
+            width: 250px; min-width: 250px; height: 100vh; position: fixed; left: 0; top: 0;
+            background-color: var(--background-content-color); border-right: 1px solid var(--border-color-light);
+            padding: 1.5rem 0; transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            z-index: 1030; display: flex; flex-direction: column; overflow-x: hidden;
+        }
+        .sidebar.collapsed { width: 75px; min-width: 75px; }
+        .sidebar ul {
+            list-style-type: none; padding: 0 1rem; margin: 0; flex-grow: 1;
+        }
+        /* Allgemeine Regel für ALLE Links in der Sidebar, inklusive Footer-Links */
+        .sidebar ul li a,
+        .sidebar ul li .btn-logout-sidebar { /* .btn-logout-sidebar auch als a-Tag gestylt */
+            display: flex; align-items: center; padding: 12px 15px; margin-bottom: 6px;
+            text-decoration: none; color: var(--primary-text-color); font-weight: 500;
+            border-radius: var(--radius-medium);
+            transition: background-color 0.15s ease-out, color 0.15s ease-out;
+            white-space: nowrap; font-size: 0.95rem; /* Einheitliche Schriftgröße */
+        }
+        .sidebar ul li a .bi,
+        .sidebar ul li .btn-logout-sidebar .bi {
+            margin-right: 16px; font-size: 1.3rem; min-width: 28px; text-align: center;
+            color: var(--secondary-text-color); transition: color 0.15s ease-out;
+        }
+
+        .sidebar.collapsed ul li a,
+        .sidebar.collapsed ul li .btn-logout-sidebar {
+            justify-content: center;
+            padding: 10px; /* Einheitliches Padding für collapsed */
+        }
+        .sidebar.collapsed ul li a .bi,
+        .sidebar.collapsed ul li .btn-logout-sidebar .bi {
+            margin-right: 0;
+        }
+
+        .sidebar ul li a:hover,
+        .sidebar ul li .btn-logout-sidebar:not([style*="color: var(--accent-color-blue)"]):hover { /* Hover für normale und rote Links */
+            background-color: #f0f0f2;
+        }
+        .sidebar ul li a.active { background-color: var(--accent-color-blue); color: white; }
+        .sidebar ul li a.active .bi { color: white; }
+
+        .sidebar .sidebar-text { opacity: 1; transition: opacity 0.1s ease-out 0.05s; }
+        .sidebar.collapsed .sidebar-text { opacity: 0; pointer-events: none; display: none; }
+
+        /* Footer-spezifische Struktur und Styling */
+        .sidebar ul li.sidebar-bottom-links {
+            margin-top: auto; /* Schiebt den Block nach unten */
+            padding-top: 0.75rem; /* Kleiner Abstand über der Trennlinie */
+            border-top: 1px solid var(--border-color-light);
+            /* Das Padding von 0 1rem der ul wird hier wirksam */
+        }
+        /* Die a-Tags im Footer-Bereich (disabled-link, Login, Register) erben das Styling von oben */
+        .sidebar ul li.sidebar-bottom-links a.disabled-link {
+            color: var(--secondary-text-color);
+            cursor: default;
+        }
+        .sidebar ul li.sidebar-bottom-links a.disabled-link:hover {
+            background-color: transparent;
+        }
+        .sidebar .btn-logout-sidebar { /* Spezifisch für den Logout Button */
+            color: var(--accent-color-red) !important; /* Wichtig, um ggf. Vererbung zu überschreiben */
+            background-color: transparent; /* Sicherstellen, dass es transparent ist */
+            border: 1px solid transparent; /* Sicherstellen */
+            width: 100%; /* Damit es die Breite des li-Containers einnimmt */
+            text-align: left;
+            cursor: pointer;
+        }
+        .sidebar .btn-logout-sidebar:hover {
+            background-color: rgba(255, 59, 48, 0.1);
+            border-color: rgba(255, 59, 48, 0.2); /* Wie in favorite.html */
+        }
+        .sidebar ul li.sidebar-bottom-links a[href*="login"],
+        .sidebar ul li.sidebar-bottom-links a[href*="register"] {
+            color: var(--accent-color-blue) !important; /* Für Login/Register Links */
+            width: 100%;
+        }
+        .sidebar ul li.sidebar-bottom-links a[href*="login"]:hover,
+        .sidebar ul li.sidebar-bottom-links a[href*="register"]:hover {
+             background-color: rgba(0, 122, 255, 0.08); /* Heller Blau-Hover für Login/Register */
+        }
+
+        .sidebar.collapsed ul li.sidebar-bottom-links .btn-logout-sidebar,
+        .sidebar.collapsed ul li.sidebar-bottom-links a {
+            width: auto; /* Im collapsed Zustand Breite anpassen */
+        }
+        .sidebar.collapsed .sidebar-bottom-links .sidebar-text { display: none; }
+
+
+        /* ----- Rest des CSS für Main Content, Header, KPI, Charts bleibt gleich ----- */
+        .main-content-wrapper {
+            margin-left: 250px; padding: 2.5rem; width: calc(100% - 250px);
+            transition: margin-left 0.3s cubic-bezier(0.4, 0, 0.2, 1), width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            height: 100vh; overflow-y: auto;
+        }
+        .main-content-wrapper.collapsed { margin-left: 75px; width: calc(100% - 75px); }
+
+        .page-header-bar {
+            display: flex; justify-content: space-between; align-items: center;
+            margin-bottom: 2rem; padding-bottom: 1rem;
+            border-bottom: 1px solid var(--border-color-light);
+        }
+        .page-header-bar h1 {
+            font-size: 2rem; font-weight: 600; margin: 0; display: flex; align-items: center;
+        }
+        .page-header-bar h1 .bi { margin-right: 0.8rem; color: var(--accent-color-blue); font-size: 1.7rem;}
+        .user-greeting-header { font-size: 0.9rem; color: var(--secondary-text-color); }
+
+        .kpi-card {
+            background-color: var(--background-content-color); border-radius: var(--radius-large);
+            padding: 1.25rem; box-shadow: var(--shadow-card);
+            display: flex; flex-direction: column; height: 100%;
+        }
+        .kpi-card-header {
+            display: flex; align-items: center; color: var(--secondary-text-color);
+            font-size: 0.8rem; font-weight: 500; margin-bottom: 0.5rem;
+            text-transform: uppercase; letter-spacing: 0.5px;
+        }
+        .kpi-card-header .bi { font-size: 1.1rem; margin-right: 0.5rem; }
+        .kpi-card-value { font-size: 2rem; font-weight: 600; color: var(--primary-text-color); margin-top: auto; }
+
+        .chart-card {
+            background-color: var(--background-content-color); border-radius: var(--radius-large);
+            padding: 1.25rem; box-shadow: var(--shadow-card);
+            min-height: 360px; display: flex; flex-direction: column;
+        }
+        .chart-card-title {
+            font-size: 1rem; font-weight: 600; color: var(--primary-text-color);
+            margin-bottom: 1rem; text-align: center;
+        }
+        .chart-canvas-container { flex-grow: 1; position: relative; min-height: 230px; }
+        .chart-card .form-select {
+            font-size: 0.85rem; border-radius: var(--radius-medium); border: 1px solid var(--border-color-light);
+            padding: 0.4rem 0.7rem; margin-top: 0.5rem; background-color: #f9f9fa; box-shadow: none;
+        }
+        .chart-card .form-select:focus { border-color: var(--accent-color-blue); box-shadow: 0 0 0 2px rgba(0,122,255,0.15); }
+        .chart-card p { font-size: 0.85rem; color: var(--secondary-text-color); margin-top: 0.6rem; }
+        .chart-card p strong { color: var(--primary-text-color); }
+
+        .row.g-custom { --bs-gutter-x: 1.25rem; --bs-gutter-y: 1.25rem; }
   </style>
 </head>
 <body>
 
-  <!-- Sidebar -->
-  <div class="sidebar" id="sidebar">
+  <nav class="sidebar" id="sidebar">
     <ul>
       <li>
-        <a href="#" id="toggleSidebar" class="nav-link">
-          <i class="bi bi-list toggle-btn"></i> <span>Navigation</span>
+        <a href="#" id="toggleSidebar">
+          <i class="bi bi-list"></i><span class="sidebar-text">Navigation</span>
         </a>
       </li>
-      <li><a href="/"><i class="bi bi-house-door-fill"></i> <span>Home</span></a></li>
-      <li><a href="/favorite"><i class="bi bi-star-fill"></i> <span>Vokabeln</span></a></li>
-      <li><a href="/quiz"><i class="bi bi-patch-question-fill"></i> <span>Vokabeltest</span></a></li>
-      <li><a href="/lernen"><i class="bi bi-book-half"></i> <span>Lernen</span></a></li>
-      <li><a href="/dashboard" class="active"><i class="bi bi-bar-chart-line-fill"></i> <span>Dashboard</span></a></li>
-      <li><a href="/hilfe"><i class="bi bi-info-circle-fill"></i> <span>Hilfe</span></a></li>
+      <li><a href="{{ url_for('index') }}" class="{{ 'active' if request.endpoint == 'index' else '' }}"><i class="bi bi-translate"></i><span class="sidebar-text">Übersetzer</span></a></li>
+      {% if current_user.is_authenticated %}
+      <li><a href="{{ url_for('favorite') }}" class="{{ 'active' if request.endpoint == 'favorite' else '' }}"><i class="bi bi-star"></i><span class="sidebar-text">Vokabeln</span></a></li>
+      <li><a href="{{ url_for('quiz_page') }}" class="{{ 'active' if request.endpoint == 'quiz_page' else '' }}"><i class="bi bi-clipboard-check"></i><span class="sidebar-text">Vokabeltest</span></a></li>
+      <li><a href="{{ url_for('lernen') }}" class="{{ 'active' if request.endpoint == 'lernen' else '' }}"><i class="bi bi-book"></i><span class="sidebar-text">Lernen</span></a></li>
+      <li><a href="{{ url_for('dashboard') }}" class="active"><i class="bi bi-grid-1x2-fill"></i><span class="sidebar-text">Dashboard</span></a></li>
+      {% endif %}
+      <li><a href="{{ url_for('hilfe') }}" class="{{ 'active' if request.endpoint == 'hilfe' else '' }}"><i class="bi bi-question-circle"></i><span class="sidebar-text">Hilfe</span></a></li>
+      
+      <!-- HTML-Struktur für Footer-Links, EXAKT wie in favorite.html -->
+      <li class="sidebar-bottom-links">
+            {% if current_user.is_authenticated %}
+                <a href="#" class="disabled-link">
+                    <i class="bi bi-person-circle"></i><span class="sidebar-text">{{ current_user.username }}</span>
+                </a>
+                <a href="{{ url_for('logout') }}" id="logoutButtonSidebar" class="btn-logout-sidebar">
+                    <i class="bi bi-box-arrow-left"></i><span class="sidebar-text">Logout</span>
+                </a>
+            {% else %}
+                <a href="{{ url_for('login') }}" class="login-link-sidebar"> <!-- Gegebenenfalls eine spezifischere Klasse oder Inline-Style für Blau -->
+                    <i class="bi bi-box-arrow-in-right"></i><span class="sidebar-text">Login</span>
+                </a>
+                 <a href="{{ url_for('register') }}" class="register-link-sidebar">
+                    <i class="bi bi-person-plus-fill"></i><span class="sidebar-text">Registrieren</span>
+                </a>
+            {% endif %}
+      </li>
     </ul>
-  </div>
+  </nav>
 
-  <!-- Dashboard-Inhalt -->
-  <div class="container mt-5">
-    <h1 class="text-center mb-5"><i class="bi bi-graph-up-arrow"></i> Lernfortschritt</h1>
+  <main class="main-content-wrapper" id="mainContent">
+    <div class="container-fluid">
+        <header class="page-header-bar">
+            <h1><i class="bi bi-bar-chart-line-fill"></i>Lernübersicht</h1>
+            {% if current_user.is_authenticated %}
+                <span class="user-greeting-header">Hallo, {{ current_user.username }}!</span>
+            {% endif %}
+        </header>
 
-    <!-- KPI-Karten -->
-    <div class="row text-center mb-5">
-      <div class="col-md-3">
-        <div class="card shadow-sm p-3">
-          <h5><i class="bi bi-check2-square text-primary"></i><br>Durchgeführte Tests</h5>
-          <h2 id="kpi-tests">–</h2>
-        </div>
-      </div>
-      <div class="col-md-3">
-        <div class="card shadow-sm p-3">
-          <h5><i class="bi bi-bookmark-fill text-success"></i><br>Gespeicherte Vokabeln</h5>
-          <h2 id="kpi-vocab">–</h2>
-        </div>
-      </div>
-      <div class="col-md-3">
-        <div class="card shadow-sm p-3">
-          <h5><i class="bi bi-bar-chart-fill text-warning"></i><br>Ø Bewertung</h5>
-          <h2 id="kpi-avg">–</h2>
-        </div>
-      </div>
-      <div class="col-md-3">
-        <div class="card shadow-sm p-3">
-          <h5><i class="bi bi-clock-history text-info"></i><br>Letzter Test</h5>
-          <h2 id="kpi-last">–</h2>
-        </div>
-      </div>
-    </div>
-
-    <!-- Diagramme -->
-    <div class="row justify-content-center">
-      <!-- Balkendiagramm -->
-      <div class="col-md-6">
-        <div class="chart-card">
-          <canvas id="langChart"></canvas>
-        </div>
-      </div>
-
-      <!-- Kreisdiagramm -->
-      <div class="col-md-6">
-        <div class="chart-card">
-          <canvas id="resultChart"></canvas>
-        </div>
-      </div>
-
-      <!-- Lernaktivität -->
-      <div class="col-md-6">
-        <div class="chart-card">
-          <canvas id="activityChart"></canvas>
-        </div>
-      </div>
-
-      <div class="col-md-6">
-        <div class="chart-card">
-          <div class="text-center mb-4" style="font-size: 12px; font-weight: 600; color: #6c757d;">
-            Sprachniveau je Sprache
+        <section class="row g-custom">
+          <div class="col-xl-3 col-md-6">
+            <div class="kpi-card">
+              <div class="kpi-card-header"><i class="bi bi-card-checklist text-primary"></i>Durchgeführte Tests</div>
+              <div class="kpi-card-value" id="kpi-tests">–</div>
+            </div>
           </div>
-          <div style="margin-bottom: 10px; font-weight: 500; font-size: 0.95rem;"><strong>Sprache auswählen:</strong></div>
-          <select id="languageSelect" class="form-select mb-2"></select>
+          <div class="col-xl-3 col-md-6">
+            <div class="kpi-card">
+              <div class="kpi-card-header"><i class="bi bi-bookmark-star-fill text-success"></i>Gespeicherte Vokabeln</div>
+              <div class="kpi-card-value" id="kpi-vocab">–</div>
+            </div>
+          </div>
+          <div class="col-xl-3 col-md-6">
+            <div class="kpi-card">
+              <div class="kpi-card-header"><i class="bi bi-trophy-fill text-warning"></i>Ø Bewertung</div>
+              <div class="kpi-card-value" id="kpi-avg">–</div>
+            </div>
+          </div>
+          <div class="col-xl-3 col-md-6">
+            <div class="kpi-card">
+              <div class="kpi-card-header"><i class="bi bi-stopwatch-fill text-info"></i>Letzter Test</div>
+              <div class="kpi-card-value" id="kpi-last">–</div>
+            </div>
+          </div>
+        </section>
 
-          
-          <p class="mt-4"><strong>Aktuelles Niveau:</strong> <span id="currentLevel">–</span></p>
-          <p><Fehlende Wörter> <span id="remainingWords">–</span></p>
-        </div>
-      </div>
+        <section class="row g-custom mt-lg-4 mt-3">
+          <div class="col-lg-6">
+            <div class="chart-card">
+              <h6 class="chart-card-title">Vokabeln pro Sprache</h6>
+              <div class="chart-canvas-container"><canvas id="langChart"></canvas></div>
+            </div>
+          </div>
+          <div class="col-lg-6">
+            <div class="chart-card">
+              <h6 class="chart-card-title">Testergebnisse</h6>
+              <div class="chart-canvas-container"><canvas id="resultChart"></canvas></div>
+            </div>
+          </div>
+          <div class="col-lg-6">
+            <div class="chart-card">
+              <h6 class="chart-card-title">Lernaktivität</h6>
+              <div class="chart-canvas-container"><canvas id="activityChart"></canvas></div>
+            </div>
+          </div>
+          <div class="col-lg-6">
+            <div class="chart-card">
+              <h6 class="chart-card-title">Sprachniveau Fortschritt</h6>
+              <select id="languageSelect" class="form-select form-select-sm"></select>
+              <p class="mt-2 mb-1"><strong>Aktuelles Niveau:</strong> <span id="currentLevel">–</span></p>
+              <p class="mb-0">Bis zum nächsten Niveau: <span id="remainingWords">–</span></p>
+            </div>
+          </div>
+        </section>
     </div>
-  </div>
+  </main>
 
-  <!-- Scripts -->
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-
-  <!-- Sidebar Toggle Script -->
   <script>
-    const toggleBtn = document.getElementById('toggleSidebar');
-    const sidebar = document.getElementById('sidebar');
-    const container = document.querySelector('.container');
+    // --- Sidebar Toggle Script ---
+    const toggleSidebarBtnJS = document.getElementById('toggleSidebar');
+    const sidebarElementJS = document.getElementById('sidebar');
+    const mainContentElementJS = document.getElementById('mainContent');
 
-    // Zustand beim Laden wiederherstellen
-    if (localStorage.getItem('sidebarCollapsed') === 'true') {
-      sidebar.classList.add('collapsed');
-      container.classList.add('collapsed');
+    function setSidebarStateJS(collapsed) {
+        const sidebarTexts = sidebarElementJS.querySelectorAll('.sidebar-text');
+        if (collapsed) {
+            sidebarElementJS.classList.add('collapsed');
+            if(mainContentElementJS) mainContentElementJS.classList.add('collapsed');
+            sidebarTexts.forEach(span => span.style.display = 'none');
+        } else {
+            sidebarElementJS.classList.remove('collapsed');
+            if(mainContentElementJS) mainContentElementJS.classList.remove('collapsed');
+            sidebarTexts.forEach(span => span.style.display = 'inline');
+        }
     }
 
-    // Klick: Zustand umschalten und speichern
-    toggleBtn.addEventListener('click', function (e) {
-      e.preventDefault();
-      sidebar.classList.toggle('collapsed');
-      container.classList.toggle('collapsed');
-      localStorage.setItem('sidebarCollapsed', sidebar.classList.contains('collapsed'));
-    });
-  </script>
+    let isSidebarCollapsedStored = localStorage.getItem('sidebarCollapsed') === 'true';
+    setSidebarStateJS(isSidebarCollapsedStored);
 
-  <script>
-    // 📊 KPI-Daten laden
-    fetch("/dashboard-kpis")
-      .then(res => res.json())
-      .then(data => {
-        document.getElementById("kpi-tests").innerText = data.total_tests;
-        document.getElementById("kpi-vocab").innerText = data.total_vocab;
-        document.getElementById("kpi-avg").innerText = data.avg_score + " %";
-        document.getElementById("kpi-last").innerText = data.last_score + " %";
-      })
-      .catch(err => console.error("❌ Fehler beim Laden der KPIs:", err));
-
-    // 📊 Vokabeln pro Sprache (Bar)
-    fetch("/vocab-language-stats")
-      .then(res => res.json())
-      .then(data => {
-        const ctx = document.getElementById("langChart").getContext("2d");
-        new Chart(ctx, {
-          type: 'bar',
-          data: {
-            labels: data.labels.map(lang => lang.toUpperCase()),
-            datasets: [{
-              label: 'Gespeicherte Vokabeln pro Sprache',
-              data: data.counts,
-              backgroundColor: '#4e79a7'
-            }]
-          },
-          options: {
-            responsive: true,
-            plugins: {
-              legend: { display: false },
-              title: {
-                display: true,
-                text: 'Vokabelanzahl pro Sprache'
-              }
-            },
-            scales: {
-              y: {
-                beginAtZero: true,
-                ticks: { stepSize: 1 }
-              }
-            }
-          }
+    if (toggleSidebarBtnJS) {
+        toggleSidebarBtnJS.addEventListener('click', function (e) {
+          e.preventDefault();
+          const shouldBeCollapsedJS = !sidebarElementJS.classList.contains('collapsed');
+          localStorage.setItem('sidebarCollapsed', shouldBeCollapsedJS);
+          setSidebarStateJS(shouldBeCollapsedJS);
         });
-      });
+    }
 
-    // ✅ Testergebnisse (Doughnut)
-    fetch("/quiz-result-summary")
+    // --- Logout Button Handler ---
+    const logoutButtonSidebarJS = document.getElementById('logoutButtonSidebar');
+    if (logoutButtonSidebarJS) {
+        logoutButtonSidebarJS.addEventListener('click', function(event) {
+            event.preventDefault();
+            fetch("{{ url_for('logout') }}")
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === 'success') {
+                        window.location.href = "{{ url_for('login') }}";
+                    } else {
+                        alert('Logout fehlgeschlagen: ' + (data.message || 'Unbekannter Fehler'));
+                    }
+                })
+                .catch(error => {
+                    console.error('Logout Fehler:', error);
+                    alert('Fehler beim Logout.');
+                });
+        });
+    }
+
+    // --- KPIs UND CHARTS JAVASCRIPT (unverändert) ---
+    // ... (Rest des JavaScript-Codes bleibt gleich)
+    const rootStyles = getComputedStyle(document.documentElement);
+    const jsPrimaryTextColor = rootStyles.getPropertyValue('--primary-text-color').trim();
+    const jsSecondaryTextColor = rootStyles.getPropertyValue('--secondary-text-color').trim();
+    const jsBorderColorLight = rootStyles.getPropertyValue('--border-color-light').trim();
+    const jsAccentBlue = rootStyles.getPropertyValue('--accent-color-blue').trim();
+    const jsAccentGreen = rootStyles.getPropertyValue('--accent-color-green').trim();
+    const jsAccentRed = rootStyles.getPropertyValue('--accent-color-red').trim();
+    const varBgContent = rootStyles.getPropertyValue('--background-content-color').trim();
+
+    Chart.defaults.font.family = rootStyles.getPropertyValue('--apple-font').trim();
+    Chart.defaults.color = jsSecondaryTextColor;
+    Chart.defaults.borderColor = jsBorderColorLight;
+    Chart.defaults.plugins.legend.labels.boxWidth = 12;
+    Chart.defaults.plugins.legend.labels.padding = 20;
+    Chart.defaults.plugins.legend.labels.font = { size: 11 };
+
+
+    fetch("{{ url_for('dashboard_kpis_route') }}")
       .then(res => res.json())
       .then(data => {
-        if (data.passed + data.failed === 0) {
-          document.getElementById("resultChart").parentElement.innerHTML =
-            '<div class="alert alert-warning text-center">Noch keine Testergebnisse vorhanden.</div>';
-          return;
+        document.getElementById("kpi-tests").innerText = data.total_tests !== undefined ? data.total_tests : "0";
+        document.getElementById("kpi-vocab").innerText = data.total_vocab !== undefined ? data.total_vocab : "0";
+        document.getElementById("kpi-avg").innerText = (data.avg_score !== undefined ? Math.round(data.avg_score) : "0") + "%";
+        document.getElementById("kpi-last").innerText = (data.last_score !== undefined ? Math.round(data.last_score) : "0") + "%";
+      }).catch(err => console.error("KPI Ladefehler:", err));
+
+    fetch("{{ url_for('vocab_language_stats_route') }}")
+      .then(res => res.json())
+      .then(data => {
+        const langChartEl = document.getElementById("langChart");
+        if (data && data.labels && data.labels.length > 0 && langChartEl) {
+            const ctx = langChartEl.getContext("2d");
+            new Chart(ctx, {
+              type: 'bar',
+              data: {
+                labels: data.labels.map(lang => lang ? lang.toUpperCase() : 'N/A'),
+                datasets: [{
+                  label: 'Vokabeln', data: data.counts,
+                  backgroundColor: 'rgba(0, 122, 255, 0.6)', borderColor: jsAccentBlue,
+                  borderWidth: 0, borderRadius: 6, barPercentage: 0.6, categoryPercentage: 0.7
+                }]
+              },
+              options: { responsive: true, maintainAspectRatio: false, indexAxis: 'y',
+                plugins: { legend: { display: false }, title: { display: false } },
+                scales: {
+                  y: { ticks: { color: jsSecondaryTextColor, font: {size: 10}, padding: 5 }, grid: { display: false, drawBorder: false }},
+                  x: { beginAtZero: true, ticks: { stepSize: Math.max(1, Math.ceil(Math.max(...(data.counts || [0])) / 4) || 1) , color: jsSecondaryTextColor, padding: 5, font: {size:10} }, grid: { color: jsBorderColorLight, drawBorder: false, zeroLineColor: jsBorderColorLight }}
+                }
+              }
+            });
+        } else if(langChartEl) {
+             langChartEl.closest('.chart-card').innerHTML = '<div class="d-flex align-items-center justify-content-center h-100"><p class="text-muted small p-3">Keine Vokabeldaten vorhanden.</p></div>';
         }
+      }).catch(err => console.error("langChart Ladefehler:", err));
 
-        const ctx = document.getElementById("resultChart").getContext("2d");
-        new Chart(ctx, {
-          type: 'doughnut',
-          data: {
-            labels: ['Bestanden', 'Nicht bestanden'],
-            datasets: [{
-              data: [data.passed, data.failed],
-              backgroundColor: ['#28a745', '#dc3545']
-            }]
-          },
-          options: {
-            responsive: true,
-            plugins: {
-              legend: { position: 'bottom' },
-              title: {
-                display: true,
-                text: 'Testergebnisse: Bestanden vs. Nicht bestanden'
-              }
-            }
-          }
-        });
-      });
-
-    // 📅 Lernaktivität über Zeit (Line)
-    fetch("/learning-activity-over-time")
+    fetch("{{ url_for('quiz_result_summary_route') }}")
       .then(res => res.json())
       .then(data => {
-        const ctx = document.getElementById("activityChart").getContext("2d");
-        new Chart(ctx, {
-          type: 'line',
-          data: {
-            labels: data.labels,
-            datasets: [{
-              label: 'Gelernte Vokabeln pro Tag',
-              data: data.counts,
-              borderColor: '#0d6efd',
-              backgroundColor: 'rgba(13, 110, 253, 0.1)',
-              tension: 0.3,
-              fill: true
-            }]
-          },
-          options: {
-            responsive: true,
-            plugins: {
-              legend: { position: 'top' },
-              title: {
-                display: true,
-                text: 'Lernaktivität (alle Sprachen)'
+        const resultChartEl = document.getElementById("resultChart");
+        if (resultChartEl && data && (data.passed !== undefined && data.failed !== undefined) && (data.passed > 0 || data.failed > 0)) {
+            const ctx = resultChartEl.getContext("2d");
+            new Chart(ctx, {
+              type: 'doughnut',
+              data: {
+                labels: ['Bestanden', 'Nicht bestanden'],
+                datasets: [{ data: [data.passed, data.failed], backgroundColor: [jsAccentGreen, jsAccentRed], borderWidth: 0, hoverOffset: 4 }]
+              },
+              options: { responsive: true, maintainAspectRatio: false, cutout: '70%',
+                plugins: { legend: { position: 'bottom', labels: { color: jsSecondaryTextColor, usePointStyle: true, pointStyle: 'circle', boxWidth: 6, padding: 15, font: {size: 11} } },
+                           title: { display: false }
+                }
               }
-            },
-            scales: {
-              y: {
-                beginAtZero: true
-              }
-            }
-          }
-        });
-      });
+            });
+        } else if(resultChartEl) {
+          resultChartEl.closest('.chart-card').innerHTML = '<div class="d-flex align-items-center justify-content-center h-100"><p class="text-muted small p-3">Keine Testergebnisse vorhanden.</p></div>';
+        }
+      }).catch(err => console.error("resultChart Ladefehler:", err));
 
-    fetch("/language-level-stats")
+    fetch("{{ url_for('learning_activity_route') }}")
+      .then(res => res.json())
+      .then(data => {
+        const activityChartEl = document.getElementById("activityChart");
+         if (data && data.labels && data.labels.length > 0 && activityChartEl) {
+            const ctx = activityChartEl.getContext("2d");
+            new Chart(ctx, {
+              type: 'line',
+              data: {
+                labels: data.labels,
+                datasets: [{
+                  label: 'Gelernte Vokabeln', data: data.counts,
+                  borderColor: jsAccentBlue, backgroundColor: 'rgba(0, 122, 255, 0.08)',
+                  tension: 0.3, fill: true, pointRadius: 3, pointBackgroundColor: jsAccentBlue,
+                  pointBorderColor: varBgContent,
+                  pointHoverRadius: 5,
+                  pointHoverBackgroundColor: jsAccentBlue, pointHoverBorderColor: varBgContent
+                }]
+              },
+              options: { responsive: true, maintainAspectRatio: false,
+                plugins: { legend: { display: false }, title: {display: false} },
+                scales: {y: {beginAtZero: true, ticks: { stepSize: 1, color: jsSecondaryTextColor, padding: 8}, grid: { color: jsBorderColorLight, drawBorder: false, zeroLineColor: jsBorderColorLight}},
+                         x: { ticks: { color: jsSecondaryTextColor, padding: 8}, grid: { display: false }}
+                }
+              }
+            });
+        } else if(activityChartEl) {
+            activityChartEl.closest('.chart-card').innerHTML = '<div class="d-flex align-items-center justify-content-center h-100"><p class="text-muted small p-3">Keine Lernaktivitäten aufgezeichnet.</p></div>';
+        }
+      }).catch(err => console.error("activityChart Ladefehler:", err));
+
+    fetch("{{ url_for('language_level_stats_route') }}")
       .then(res => res.json())
       .then(data => {
         const select = document.getElementById("languageSelect");
-        const level = document.getElementById("currentLevel");
-        const remaining = document.getElementById("remainingWords");
+        const levelEl = document.getElementById("currentLevel");
+        const remainingEl = document.getElementById("remainingWords");
 
-        // Dropdown-Optionen erzeugen
-        data.forEach(entry => {
-          const option = document.createElement("option");
-          option.value = entry.language;
-          option.text = entry.language.toUpperCase();
-          select.appendChild(option);
-        });
-
-        // Anzeige initialisieren
-        function updateDisplay(language) {
-          const selected = data.find(e => e.language === language);
-          level.innerText = selected.level;
-          let nextLevel = "–";
-          const levelOrder = ["-", "A1", "A2", "B1", "B2", "C1", "C2"];
-          const currentIndex = levelOrder.indexOf(selected.level);
-          if (currentIndex >= 0 && currentIndex < levelOrder.length - 1) {
-            nextLevel = levelOrder[currentIndex + 1];
-          }
-          if (selected.remaining > 0) {
-            remaining.innerHTML = `Fehlende Vokabeln bis <strong>Niveau ${nextLevel}</strong>: ${selected.remaining}`;
-          } else {
-            remaining.innerHTML = `<strong>🎉 Maximales Niveau erreicht</strong>`;
-          }
+        if ((!data || data.length === 0) && select) {
+            select.closest('.chart-card').innerHTML = '<div class="d-flex align-items-center justify-content-center h-100"><p class="text-muted small p-3">Keine Sprachlevel-Daten verfügbar.</p></div>';
+            return;
         }
-
-        // Beim Wechsel aktualisieren
-        select.addEventListener("change", () => {
-          updateDisplay(select.value);
-        });
-
-        // Erste Option vorauswählen
-        if (data.length > 0) {
-          select.value = data[0].language;
-          updateDisplay(data[0].language);
+        if(select && levelEl && remainingEl){
+            data.forEach(entry => {
+              const option = document.createElement("option");
+              option.value = entry.language;
+              option.text = entry.language ? entry.language.toUpperCase() : "Unbekannt";
+              select.appendChild(option);
+            });
+            function updateDisplay(language) {
+              const selected = data.find(e => e.language === language);
+              if (!selected) { levelEl.innerText = "-"; remainingEl.innerText = "N/A"; return; }
+              levelEl.innerText = selected.level || "-";
+              let nextLevelText = "–";
+              const levelOrder = ["-", "A1", "A2", "B1", "B2", "C1", "C2"];
+              const currentIndex = levelOrder.indexOf(selected.level || "-");
+              if (currentIndex >= 0 && currentIndex < levelOrder.length - 1) nextLevelText = levelOrder[currentIndex + 1];
+              if (selected.remaining > 0) remainingEl.innerHTML = `<strong>${selected.remaining}</strong> Vokabeln bis ${nextLevelText}`;
+              else if (selected.level === "C2") remainingEl.innerHTML = `<strong>🎉 Höchstes Niveau!</strong>`;
+              else remainingEl.innerHTML = `N/A`;
+            }
+            select.addEventListener("change", () => updateDisplay(select.value));
+            if (data.length > 0 && data[0].language) {
+              select.value = data[0].language; updateDisplay(data[0].language);
+            } else if (data.length > 0) { levelEl.innerText = "-"; remainingEl.innerText = "N/A"; }
         }
-      });
-
-
+      }).catch(err => console.error("languageLevelStats Ladefehler:", err));
   </script>
 </body>
 </html>
