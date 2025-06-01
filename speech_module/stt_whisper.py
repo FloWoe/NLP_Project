@@ -4,7 +4,7 @@ import torch
 import gc  # für Speicherfreigabe
 
 # Whisper-Cache-Verzeichnis setzen (falls nicht vorhanden)
-cache_dir = "C:/Users/noahs/whisper_cache"
+cache_dir = "C:/Users/flori/openai_whisper_chache/"
 os.makedirs(cache_dir, exist_ok=True)
 os.environ["XDG_CACHE_HOME"] = cache_dir
 

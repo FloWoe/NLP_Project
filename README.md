@@ -79,7 +79,7 @@ cd dein-repo
 
 ```bash
 pip install -r requirements.txt
-phyton spacy_install.py
+python spacy_install.py
 pip install git+https://github.com/openai/whisper.git
 
 ```
