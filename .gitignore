@@ -1,5 +1,6 @@
 # API Keys
 configuration/config.env
 .env
+.venv
 
 Backend/output.mp3
