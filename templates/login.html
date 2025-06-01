@@ -3,20 +3,131 @@
 <head>
     <meta charset="UTF-8">
     <title>Login - Vokabeltrainer</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}"> <!-- Deine globalen Styles -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
     <style>
-        body { display: flex; align-items: center; justify-content: center; min-height: 100vh; background-color: #f8f9fa; }
-        .login-container { max-width: 400px; width: 100%; padding: 2rem; background: white; border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
-        .logo-icon { font-size: 3rem; color: #0d6efd; }
+        body {
+          background-color: #f8f9fa;
+          font-size: 1.1rem;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+          min-height: 100vh;
+          text-align: center;
+          padding: 20px;
+        }
+
+        .login-container {
+            max-width: 480px; /* Etwas breiter für die Begrüßungen */
+            width: 100%;
+        }
+
+        .login-card {
+          padding: 2.5rem 2rem;
+          border-radius: 15px;
+          background: white;
+          box-shadow: 0 8px 40px rgba(0, 0, 0, 0.08);
+          text-align: left;
+          margin-top: 1.5rem; /* Abstand zum Welcome-Text */
+        }
+
+        .welcome-text-login { /* Neuer Container für die mehrsprachige Begrüßung */
+            margin-bottom: 2rem;
+            font-weight: bold;
+            color: #444; /* Etwas dunklere Farbe für die Begrüßungen */
+        }
+        /* Schriftgrößen für die Begrüßungen, angepasst für Login-Seite */
+        .welcome-text-login h1 { font-size: 2.8rem; margin-bottom: 0.3rem; opacity: 0.9; }
+        .welcome-text-login h2 { font-size: 2.3rem; margin-bottom: 0.3rem; opacity: 0.8; }
+        .welcome-text-login h3 { font-size: 1.9rem; margin-bottom: 0.3rem; opacity: 0.7; }
+        .welcome-text-login h4 { font-size: 1.6rem; margin-bottom: 0.3rem; opacity: 0.6; }
+        .welcome-text-login h5 { font-size: 1.3rem; opacity: 0.5; }
+
+
+        .login-header-text { /* Zusätzlicher Text unter den Begrüßungen */
+            text-align: center;
+            margin-bottom: 1rem; /* Abstand zur Karte */
+            margin-top: -0.5rem; /* Um näher an die Begrüßungen zu rücken */
+        }
+        .login-header-text p {
+            font-size: 1rem;
+            color: #6c757d;
+        }
+
+
+        .form-floating > label {
+            font-size: 0.9rem;
+        }
+        .btn-primary.login-button {
+          width: 100%;
+          padding: 0.85rem;
+          font-size: 1.05rem;
+          font-weight: 500;
+          border-radius: 8px;
+        }
+        .sub-links {
+            font-size: 0.9rem;
+            margin-top: 1.5rem;
+            text-align: center;
+        }
+        .sub-links a {
+            text-decoration: none;
+            color: var(--bs-primary);
+        }
+        .sub-links a:hover {
+            text-decoration: underline;
+        }
+
+        .fade-in {
+          animation: fadeIn 1.5s ease-in-out;
+        }
+        .fade-in-delay { /* Für Elemente, die später erscheinen sollen */
+          animation: fadeIn 1.5s ease-in-out 0.3s; /* 0.3s Verzögerung */
+          animation-fill-mode: backwards; /* Stellt sicher, dass der Startzustand (opacity 0) vor der Animation angewendet wird */
+        }
+        @keyframes fadeIn {
+          0% { opacity: 0; transform: translateY(20px); }
+          100% { opacity: 1; transform: translateY(0); }
+        }
+
+        footer {
+          margin-top: 3rem;
+          font-size: 0.9rem;
+          color: #6c757d;
+        }
+        footer a {
+            text-decoration: none;
+            color: #6c757d;
+            margin: 0 0.75rem;
+        }
+        footer a:hover {
+            color: var(--bs-primary);
+        }
+
+        .alert {
+            font-size: 0.9rem;
+            border-radius: 8px;
+            text-align: left;
+        }
     </style>
 </head>
 <body>
-    <div class="login-container text-center">
-        <i class="bi bi-translate logo-icon mb-3"></i> <!-- Optional: dein App-Icon -->
-        <h2>Login</h2>
-        <p class="text-muted mb-4">Willkommen zurück!</p>
+  <div class="login-container">
+    <div class="welcome-text-login fade-in"> <!-- Mehrsprachige Begrüßung hier -->
+      <h1>ようこそ</h1>
+      <h2>Welcome</h2>
+      <h3>Willkommen</h3>
+      <h4>Bienvenue</h4>
+      <h5>Bienvenido</h5>
+    </div>
 
+    <div class="login-header-text fade-in-delay">
+        <p>Melde dich an, um mit deinem Vokabeltrainer fortzufahren.</p>
+    </div>
+
+    <div class="login-card fade-in-delay"> <!-- Login-Karte erscheint leicht verzögert -->
         <div id="loginMessage" class="alert" role="alert" style="display: none;"></div>
 
         <form id="loginForm">
@@ -28,66 +139,82 @@
                 <input type="password" class="form-control" id="password" placeholder="Passwort" required>
                 <label for="password">Passwort</label>
             </div>
-            <div class="form-check text-start mb-3">
+            <div class="form-check text-start mb-4">
                 <input class="form-check-input" type="checkbox" value="" id="rememberMe">
-                <label class="form-check-label" for="rememberMe">
+                <label class="form-check-label" for="rememberMe" style="font-size: 0.9rem;">
                     Angemeldet bleiben
                 </label>
             </div>
-            <button class="btn btn-primary w-100 py-2" type="submit">Einloggen</button>
+            <button class="btn btn-primary login-button py-2" type="submit">Einloggen</button>
         </form>
-        <p class="mt-3">
-            Noch kein Konto? <a href="{{ url_for('register') }}">Jetzt registrieren</a>            
-        </p>
-        <p class="mt-3">
-             <a href="{{ url_for('index') }}">Zurück zur Startseite</a>
-        </p>
     </div>
 
-    <script>
-        const loginForm = document.getElementById('loginForm');
-        const loginMessage = document.getElementById('loginMessage');
+    <div class="sub-links fade-in-delay">
+        Noch kein Konto? <a href="{{ url_for('register') }}">Jetzt registrieren</a>
+        <span class="mx-1">|</span>
+        <a href="{{ url_for('index') }}">Zurück zur Startseite</a>
+    </div>
+  </div>
 
-        loginForm.addEventListener('submit', function(event) {
-            event.preventDefault();
-            showMessage('', ''); // Alte Nachrichten löschen
+  <footer class="fade-in-delay" style="animation-delay: 0.6s;"> <!-- Footer noch später -->
+      <a href="{{ url_for('hilfe') }}">Hilfe</a>
+      <a href="/datenschutz">Datenschutz</a>
+      <a href="/impressum">Impressum</a>
+  </footer>
 
-            const loginIdentifier = document.getElementById('loginIdentifier').value;
-            const password = document.getElementById('password').value;
-            const rememberMe = document.getElementById('rememberMe').checked;
+  <script>
+    const loginForm = document.getElementById('loginForm');
+    const loginMessage = document.getElementById('loginMessage');
 
-            fetch("{{ url_for('login') }}", { // Stellt sicher, dass 'login' der Name deiner Login-Route in app.py ist
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    login_identifier: loginIdentifier,
-                    password: password,
-                    remember: rememberMe
-                }),
-            })
-            .then(response => response.json().then(data => ({ status: response.status, body: data })))
-            .then(({ status, body }) => {
-                if (status === 200 && body.status === 'success') {
-                    showMessage(body.message || 'Login erfolgreich!', 'success');
-                    // Weiterleitung nach erfolgreichem Login
-                    window.location.href = "{{ url_for('dashboard') }}"; // Oder eine andere Zielseite
-                } else {
-                    showMessage(body.message || 'Login fehlgeschlagen. Bitte überprüfe deine Eingaben.', 'danger');
-                }
-            })
-            .catch(error => {
-                console.error('Login Fehler:', error);
-                showMessage('Ein Netzwerkfehler ist aufgetreten. Bitte versuche es später erneut.', 'danger');
-            });
+    loginForm.addEventListener('submit', function(event) {
+        event.preventDefault();
+        showMessage('', '');
+
+        const loginIdentifier = document.getElementById('loginIdentifier').value;
+        const password = document.getElementById('password').value;
+        const rememberMe = document.getElementById('rememberMe').checked;
+
+        fetch("{{ url_for('login') }}", {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                login_identifier: loginIdentifier,
+                password: password,
+                remember: rememberMe
+            }),
+        })
+        .then(response => response.json().then(data => ({ status: response.status, body: data })))
+        .then(({ status, body }) => {
+            if (status === 200 && body.status === 'success') {
+                showMessage(body.message || 'Login erfolgreich! Du wirst weitergeleitet...', 'success');
+                setTimeout(() => {
+                    window.location.href = "{{ url_for('dashboard') }}";
+                }, 1500);
+            } else {
+                showMessage(body.message || 'Login fehlgeschlagen. Bitte überprüfe deine Eingaben.', 'danger');
+            }
+        })
+        .catch(error => {
+            console.error('Login Fehler:', error);
+            showMessage('Ein Netzwerkfehler ist aufgetreten. Bitte versuche es später erneut.', 'danger');
         });
+    });
 
-        function showMessage(message, type) {
-            loginMessage.textContent = message;
-            loginMessage.className = `alert alert-${type}`; // Bootstrap alert classes
-            loginMessage.style.display = message ? 'block' : 'none';
+    function showMessage(message, type) {
+        loginMessage.textContent = message;
+        loginMessage.className = `alert alert-${type} alert-dismissible fade show`;
+        loginMessage.style.display = message ? 'block' : 'none';
+
+        if (message) {
+            setTimeout(() => {
+                if (loginMessage.style.display !== 'none') {
+                    loginMessage.classList.remove('show');
+                    setTimeout(() => { loginMessage.style.display = 'none'; }, 150);
+                }
+            }, 5000);
         }
-    </script>
+    }
+  </script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
