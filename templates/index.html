@@ -547,12 +547,63 @@
 
         // Minimalbeispiele für die restlichen Funktionen (du musst deinen Code einfügen):
         let isRecording = false; let mediaRecorder; let audioChunks = [];
-        function toggleRecording() { /* ... dein Code ... */ }
+        function toggleRecording() {
+        if (isRecording) {
+        mediaRecorder.stop();
+        document.getElementById("micBtn").classList.remove("active");
+        isRecording = false;
+        return;
+        }
+
+        navigator.mediaDevices.getUserMedia({ audio: true })
+        .then(stream => {
+            audioChunks = [];
+            mediaRecorder = new MediaRecorder(stream);
+            mediaRecorder.start();
+            isRecording = true;
+            document.getElementById("micBtn").classList.add("active");
+
+            mediaRecorder.ondataavailable = e => {
+                audioChunks.push(e.data);
+            };
+
+            mediaRecorder.onstop = () => {
+                const audioBlob = new Blob(audioChunks, { type: "audio/webm" });
+                const formData = new FormData();
+                formData.append("audio", audioBlob, "speech.webm");
+
+                fetch("/transcribe-audio", {
+                    method: "POST",
+                    body: formData
+                })
+                .then(response => response.json())
+                .then(data => {
+                    document.getElementById("micBtn").classList.remove("active");
+                    if (data.transcription) {
+                        document.getElementById("inputText").innerText = data.transcription;
+                        handleInputTranslation();
+                    } else {
+                        alert(data.error || "Transkription fehlgeschlagen.");
+                    }
+                })
+                .catch(err => {
+                    console.error("Fehler beim Senden der Audiodaten:", err);
+                    alert("Transkription fehlgeschlagen.");
+                    document.getElementById("micBtn").classList.remove("active");
+                });
+            };
+        })
+        .catch(err => {
+            console.error("Zugriff auf Mikrofon verweigert:", err);
+            alert("Kein Zugriff auf Mikrofon.");
+        });
+        }
+
         function speakInputText() {
             const text = document.getElementById("inputText").innerText.trim();
             const lang = document.getElementById("sourceLang").value;
             if (!text) return;
-            fetch("{{ url_for('tts') }}", { method: "POST", headers: {"Content-Type": "application/json"}, body: JSON.stringify({text, lang})}).then(r => r.blob()).then(b => new Audio(URL.createObjectURL(b)).play());
+            fetch("{{ url_for('transcribe_audio_route') }}", { method: "POST", headers: {"Content-Type": "application/json"}, body: JSON.stringify({text, lang})}).then(r => r.blob()).then(b => new Audio(URL.createObjectURL(b)).play());
         }
         function speakOutputText() {
             const text = document.getElementById("outputText").innerText.trim();
