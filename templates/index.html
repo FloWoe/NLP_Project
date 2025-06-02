@@ -408,17 +408,38 @@
         document.getElementById("inputText").addEventListener("input", handleInputTranslation);
 
         function clearHighlights() {
-            ["inputText", "outputText"].forEach(id => {
-                const el = document.getElementById(id);
-                el.innerHTML = el.innerText; // Nur den Text behalten, um alle Spans zu entfernen
+        ["inputText", "outputText"].forEach(id => {
+        const el = document.getElementById(id);
+
+        // Temporäres DOM-Element zum Bearbeiten
+        const temp = document.createElement("div");
+        temp.innerHTML = el.innerHTML;
+
+        // Alle markierten Wörter (highlight) entfernen, aber Text behalten
+        temp.querySelectorAll('.highlight').forEach(span => {
+            const textNode = document.createTextNode(span.textContent);
+            span.replaceWith(textNode);
             });
-            document.getElementById("explanationBox").style.display = "none";
-            document.getElementById("explanationBox").innerHTML = "";
-            const saveWrapper = document.getElementById("saveVocabWrapper");
-            if(saveWrapper) saveWrapper.style.display = "none";
-            lastMatchedWord = null;
-            highlightIndexGlobal = 0;
-        }
+
+        // Alle Info-Icons entfernen
+        temp.querySelectorAll('.info-icon').forEach(icon => {
+            icon.remove();
+        });
+
+        // Ergebnis zurück ins Textfeld schreiben
+        el.innerHTML = temp.innerHTML;
+    });
+
+    document.getElementById("explanationBox").style.display = "none";
+    document.getElementById("explanationBox").innerHTML = "";
+    
+    const saveWrapper = document.getElementById("saveVocabWrapper");
+    if (saveWrapper) saveWrapper.style.display = "none";
+
+    lastMatchedWord = null;
+    highlightIndexGlobal = 0;
+}
+
 
         function handleSelection(langFromBox) { // Parameter umbenannt, um Konflikt mit globalem lang zu vermeiden
             const selection = window.getSelection();
@@ -446,23 +467,35 @@
             }).then(res => res.json()).then(data => {
                 if (data.error) { console.error("Matching Error:", data.error); return; }
                 
-                clearHighlights(); // Vor dem neuen Highlighting alte entfernen
+                
 
                 const color = highlightColorsGlobal[highlightIndexGlobal % highlightColorsGlobal.length];
                 highlightIndexGlobal++;
 
                 const applyHighlightsToBox = (boxId, words, isExplanationSource) => {
-                    const box = document.getElementById(boxId);
-                    if (!box || !words || words.length === 0) return;
-                    let htmlContent = box.innerText; // Beginne mit reinem Text
-                    words.forEach(wordToHighlight => {
-                        const regex = new RegExp(`\\b(${wordToHighlight.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})(?![^<]*>|[^<>]*<\\/)`, "gi"); // Verhindert Highlighting in HTML-Tags
-                        htmlContent = htmlContent.replace(regex, (match) => 
-                            `<span class="highlight" style="background-color:${color};">${match}</span><span class="info-icon" onclick="fetchExplanation(event, '${match.replace(/'/g, "\\'")}', '${boxId}')"> ℹ️</span>`
-                        );
-                    });
-                    box.innerHTML = htmlContent;
-                };
+                const box = document.getElementById(boxId);
+                if (!box || !words || words.length === 0) return;
+
+                // Arbeite mit bestehendem HTML-Inhalt, nicht mit reinem Text
+                let htmlContent = box.innerHTML;
+
+                words.forEach(wordToHighlight => {
+                const escapedWord = wordToHighlight.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); // Sonderzeichen escapen
+                const regex = new RegExp(`\\b(${escapedWord})(?![^<]*>|[^<>]*<\\/)`, "gi");
+
+                htmlContent = htmlContent.replace(regex, (match) => {
+                 // Doppelte Markierung verhindern – prüfe, ob match bereits markiert ist
+                const alreadyMarked = new RegExp(`<span class="highlight"[^>]*>${match}</span>`, "i").test(htmlContent);
+                if (alreadyMarked) return match;
+
+                // Markierung + Info-Icon einfügen
+            return `<span class="highlight" style="background-color:${color};">${match}</span><span class="info-icon" onclick="fetchExplanation(event, '${match.replace(/'/g, "\\'")}', '${boxId}')"> ℹ️</span>`;
+            });
+            });
+
+        box.innerHTML = htmlContent;
+            };
+
 
                 if (langFromBox === 'lang1') {
                     applyHighlightsToBox('inputText', data.originalMatches || [selectedText], true);
@@ -575,6 +608,7 @@
                 document.getElementById("saveVocabWrapper").style.display = 'none'; lastMatchedWord = null;
             }).catch(e => alert("Netzwerkfehler."));
         }
+
 
     </script>
 </body>
