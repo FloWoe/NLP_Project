@@ -268,7 +268,7 @@
             <div class="text-box-wrapper">
                 <div id="inputText" contenteditable="true" class="text-box" oninput="handleInputTranslation()" onmouseup="handleSelection('lang1')" placeholder="Text hier eingeben..."></div>
                 <div class="box-actions-toolbar">
-                    <button class="btn-icon" onclick="toggleRecording()" id="micBtn" title="Spracheingabe (REC)">
+                    <button class="btn-icon mic-button" onclick="toggleRecording()" id="micBtn" title="Spracheingabe (REC)">
                         <i class="bi bi-mic-fill"></i>
                     </button>
                     <button class="btn-icon" id="inputSpeaker" onclick="speakInputText()" title="Eingabetext vorlesen">
@@ -539,13 +539,6 @@
             }).catch(err => { console.error("Explanation Error:", err); /* ... */ });
         }
 
-        // --- Dein restliches JavaScript für toggleRecording, speakInputText, speakOutputText, swapLanguagesAndText,
-        // --- generateLearningText, Tooltip, generateGapFromOutput, Lückentext Enter-Handler, saveVocabEntry
-        // --- hier einfügen und sicherstellen, dass die url_for() Aufrufe korrekt sind und
-        // --- Element-IDs mit dem neuen HTML übereinstimmen.
-        // --- playTTS in speakInputText und speakOutputText sollte den lang-Parameter korrekt übergeben.
-
-        // Minimalbeispiele für die restlichen Funktionen (du musst deinen Code einfügen):
         let isRecording = false; let mediaRecorder; let audioChunks = [];
         function toggleRecording() {
         if (isRecording) {
@@ -572,7 +565,7 @@
                 const formData = new FormData();
                 formData.append("audio", audioBlob, "speech.webm");
 
-                fetch("/transcribe-audio", {
+                fetch("/transcribe-audio", { //  Stelle sicher, dass dieser Endpunkt existiert und korrekt ist. url_for wäre besser.
                     method: "POST",
                     body: formData
                 })
@@ -603,7 +596,9 @@
             const text = document.getElementById("inputText").innerText.trim();
             const lang = document.getElementById("sourceLang").value;
             if (!text) return;
-            fetch("{{ url_for('transcribe_audio_route') }}", { method: "POST", headers: {"Content-Type": "application/json"}, body: JSON.stringify({text, lang})}).then(r => r.blob()).then(b => new Audio(URL.createObjectURL(b)).play());
+            // Annahme: 'transcribe_audio_route' ist ein Tippfehler und sollte 'tts' sein oder einen spezifischen TTS-Endpunkt für Eingabetext.
+            // Wenn 'tts' für beide genutzt wird und die Sprache mitgesendet wird, ist das ok.
+            fetch("{{ url_for('tts') }}", { method: "POST", headers: {"Content-Type": "application/json"}, body: JSON.stringify({text, lang})}).then(r => r.blob()).then(b => new Audio(URL.createObjectURL(b)).play());
         }
         function speakOutputText() {
             const text = document.getElementById("outputText").innerText.trim();
@@ -633,7 +628,7 @@
             fetch("{{ url_for('gap_fill') }}", {method: "POST", headers: {"Content-Type": "application/json"}, body: JSON.stringify({sentence})})
             .then(r=>r.json()).then(d => {
                 if(d.error || !d.gap_text || d.original_word === null) { alert("Lückentext konnte nicht erstellt werden."); return;}
-                const html = d.gap_text.replace(/_____/g, `<input class="gap-input" type="text" data-solution="${d.original_word.replace(/"/g, '"')}">`);
+                const html = d.gap_text.replace(/_____/g, `<input class="gap-input" type="text" data-solution="${d.original_word.replace(/"/g, '"')}">`); // Ersetze " durch " für data-Attribut
                 document.getElementById("outputText").innerHTML = html;
             });
         }
