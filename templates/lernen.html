@@ -282,19 +282,57 @@
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
   <script>
-    // Sidebar Toggle Script (wie in anderen Dateien)
+    // Sidebar Toggle Script
     const toggleSidebarBtnJS = document.getElementById('toggleSidebar');
     const sidebarElementJS = document.getElementById('sidebar');
     const mainContentElementJS = document.getElementById('mainContent');
-    function setSidebarStateJS(collapsed) { /* ... (vollständiges Skript von oben) ... */ }
+
+    function setSidebarStateJS(collapsed) {
+        const sidebarTexts = sidebarElementJS.querySelectorAll('.sidebar-text');
+        if (collapsed) {
+            sidebarElementJS.classList.add('collapsed');
+            if(mainContentElementJS) mainContentElementJS.classList.add('collapsed');
+            sidebarTexts.forEach(span => span.style.display = 'none');
+        } else {
+            sidebarElementJS.classList.remove('collapsed');
+            if(mainContentElementJS) mainContentElementJS.classList.remove('collapsed');
+            sidebarTexts.forEach(span => span.style.display = 'inline');
+        }
+    }
     const isSidebarCollapsedStored = localStorage.getItem('sidebarCollapsed') === 'true';
     setSidebarStateJS(isSidebarCollapsedStored);
-    if (toggleSidebarBtnJS) { /* ... (vollständiges Skript von oben) ... */ }
+
+    if (toggleSidebarBtnJS) {
+        toggleSidebarBtnJS.addEventListener('click', function (e) {
+          e.preventDefault();
+          const shouldBeCollapsedJS = !sidebarElementJS.classList.contains('collapsed');
+          localStorage.setItem('sidebarCollapsed', shouldBeCollapsedJS);
+          setSidebarStateJS(shouldBeCollapsedJS);
+        });
+    }
+
+    // Logout Button Handler
     const logoutButtonSidebarJS = document.getElementById('logoutButtonSidebar');
-    if (logoutButtonSidebarJS) { /* ... (vollständiger Logout Handler von oben) ... */ }
+    if (logoutButtonSidebarJS) {
+        logoutButtonSidebarJS.addEventListener('click', function(event) {
+            event.preventDefault(); // Verhindert die Standard-Link-Aktion
+            fetch("{{ url_for('logout') }}")
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === 'success') {
+                        window.location.href = "{{ url_for('login') }}";
+                    } else {
+                        alert('Logout fehlgeschlagen: ' + (data.message || 'Unbekannter Fehler'));
+                    }
+                })
+                .catch(error => {
+                    console.error('Logout Fehler:', error);
+                    alert('Fehler beim Logout.');
+                });
+        });
+    }
 
-
-    // JavaScript für Lernmodus (dein bestehender Code, ggf. leicht angepasst)
+    // JavaScript für Lernmodus
     let currentVocab = null;
     const originalWordEl = document.getElementById("originalWord");
     const originalSentenceEl = document.getElementById("originalSentence");
@@ -309,7 +347,7 @@
         .then(res => res.json())
         .then(data => {
             if (data.status === 'success') {
-                loadNextVocab(); // Lädt die erste Vokabel und aktualisiert den Fortschrittsbalken
+                loadNextVocab(); 
             } else {
                 alert("Fehler beim Starten der Session: " + (data.message || "Unbekannt"));
                 originalWordEl.textContent = "Fehler beim Starten der Session.";
@@ -334,23 +372,23 @@
             translatedSentenceEl.textContent = "";
             currentVocab = null;
           } else {
-            currentVocab = data; // Speichert die gesamte Vokabel inkl. Sätze
+            currentVocab = data; 
             originalWordEl.textContent = data.original_word || "(Wort fehlt)";
             originalSentenceEl.textContent = data.original_sentence || "";
             translationEl.textContent = data.translated_word || "(Übersetzung fehlt)";
             translatedSentenceEl.textContent = data.translated_sentence || "";
           }
-          updateProgressBar(); // Aktualisiert den Fortschrittsbalken basierend auf der Antwort von /learning-progress
+          updateProgressBar(); 
         })
         .catch(() => {
           originalWordEl.textContent = "❌ Fehler beim Laden der Vokabel.";
           currentVocab = null;
-          updateProgressBar(); // Auch bei Fehler den Balken aktualisieren (zeigt dann 0/X an)
+          updateProgressBar(); 
         });
     }
 
     function submitAnswer(result) {
-      if (!currentVocab || currentVocab.id === undefined) { // Prüfe auf gültige ID
+      if (!currentVocab || currentVocab.id === undefined) { 
         loadNextVocab();
         return;
       }
@@ -374,7 +412,7 @@
     }
 
     function flipCard() {
-      if (currentVocab) { // Nur umdrehen, wenn eine Vokabel geladen ist
+      if (currentVocab) { 
         flashcardEl.classList.toggle("flipped");
       }
     }
@@ -416,30 +454,20 @@
         .then(res => res.json())
         .then(progress => {
           if (progressBarEl && progressTextEl && progress) {
-              const percent = progress.active ? (progress.percent || 0) : 0; // Wenn nicht aktiv, 0%
+              const percent = progress.active ? (progress.percent || 0) : 0; 
               const correct = progress.active ? (progress.correct || 0) : 0;
-              const total = progress.active ? (progress.total || 0) : (currentVocab ? 1 : 0); // Wenn nicht aktiv, aber Vocab da ist, mind. 1 anzeigen
+              const total = progress.active ? (progress.total || 0) : (currentVocab ? 1 : 0); 
 
               progressBarEl.style.width = percent + "%";
               progressBarEl.setAttribute('aria-valuenow', percent);
               progressTextEl.textContent = `Fortschritt: ${correct} / ${total}`;
-              
-              // Optional: Wenn alle Vokabeln der Session durch sind und die Session aktiv war
-              // if (progress.active && correct >= total && total > 0 && !document.getElementById("cardFront").textContent.includes("🎉")) {
-              //    originalWordEl.textContent = "🎉 Session abgeschlossen!";
-              // }
           }
         })
         .catch(err => console.error("Fehler beim Laden des Fortschritts:", err));
     }
 
     document.addEventListener('DOMContentLoaded', () => {
-        // Initialisiere den Fortschrittsbalken und versuche, eine Vokabel zu laden,
-        // falls eine Session bereits im Backend aktiv sein könnte (z.B. nach Seiten-Reload).
-        // Dies hängt davon ab, ob dein Backend den Session-Status über Requests hinweg speichert.
-        // Für den In-Memory Cache in learning_engine.py ist es besser, explizit "Neue Session" zu klicken.
         updateProgressBar(); 
-        // loadNextVocab(); // Eventuell hier nicht automatisch laden, sondern User explizit starten lassen.
     });
   </script>
 </body>

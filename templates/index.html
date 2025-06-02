@@ -150,6 +150,7 @@
         }
         .box-actions-toolbar .btn-icon:hover { background-color: #e0e0e5; color: var(--primary-text-color); }
         .box-actions-toolbar .mic-button.active i { color: var(--accent-color-red); }
+        .box-actions-toolbar .speaker-button.active i { color: var(--accent-color-green); } /* NEU */
         
         .generate-wrapper { position: relative; margin-left: auto; } /* Schiebt den Stern nach rechts */
         .generate-tooltip {
@@ -268,10 +269,10 @@
             <div class="text-box-wrapper">
                 <div id="inputText" contenteditable="true" class="text-box" oninput="handleInputTranslation()" onmouseup="handleSelection('lang1')" placeholder="Text hier eingeben..."></div>
                 <div class="box-actions-toolbar">
-                    <button class="btn-icon" onclick="toggleRecording()" id="micBtn" title="Spracheingabe (REC)">
+                    <button class="btn-icon mic-button" onclick="toggleRecording()" id="micBtn" title="Spracheingabe (REC)">
                         <i class="bi bi-mic-fill"></i>
                     </button>
-                    <button class="btn-icon" id="inputSpeaker" onclick="speakInputText()" title="Eingabetext vorlesen">
+                    <button class="btn-icon speaker-button" id="inputSpeaker" onclick="speakInputText()" title="Eingabetext vorlesen">
                         <i class="bi bi-volume-up-fill"></i>
                     </button>
                     <div class="generate-wrapper">
@@ -290,7 +291,7 @@
             <div class="text-box-wrapper">
                 <div id="outputText" contenteditable="false" class="text-box" onmouseup="handleSelection('lang2')" placeholder="Übersetzung erscheint hier..."></div>
                  <div class="box-actions-toolbar">
-                    <button class="btn-icon" id="outputSpeaker" onclick="speakOutputText()" title="Übersetzung vorlesen">
+                    <button class="btn-icon speaker-button" id="outputSpeaker" onclick="speakOutputText()" title="Übersetzung vorlesen"> 
                         <i class="bi bi-volume-up-fill"></i>
                     </button>
                     <button class="btn-icon" onclick="generateGapFromOutput()" title="Lückentext erstellen">
@@ -371,7 +372,27 @@
         const highlightColorsGlobal = ["#ffd500", "#39FF14", "#a200ff", "#00bfff", "#ff2b2b"];
         let highlightIndexGlobal = 0;
 
+        // NEU: Globale Variablen für Audiowiedergabe
+        let currentAudio = null;
+        let activeSpeakerButton = null;
+
+        function stopCurrentAudioPlayback() {
+            if (currentAudio) {
+                currentAudio.pause();
+                currentAudio.currentTime = 0; // Zurücksetzen für erneutes Abspielen
+                currentAudio.onended = null; // Event Listener entfernen
+                currentAudio.onpause = null; // Event Listener entfernen
+                currentAudio = null;
+            }
+            if (activeSpeakerButton) {
+                activeSpeakerButton.classList.remove('active');
+                activeSpeakerButton = null;
+            }
+        }
+
+
         function handleInputTranslation() {
+            stopCurrentAudioPlayback(); // Audiowiedergabe stoppen bei neuer Eingabe
             const text = document.getElementById("inputText").innerText.trim();
             const fullTargetLang = document.getElementById("targetLang").value;
             const targetLang = fullTargetLang.split("-")[0];
@@ -408,51 +429,40 @@
         document.getElementById("inputText").addEventListener("input", handleInputTranslation);
 
         function clearHighlights() {
-        ["inputText", "outputText"].forEach(id => {
-        const el = document.getElementById(id);
-
-        // Temporäres DOM-Element zum Bearbeiten
-        const temp = document.createElement("div");
-        temp.innerHTML = el.innerHTML;
-
-        // Alle markierten Wörter (highlight) entfernen, aber Text behalten
-        temp.querySelectorAll('.highlight').forEach(span => {
-            const textNode = document.createTextNode(span.textContent);
-            span.replaceWith(textNode);
+            stopCurrentAudioPlayback(); // Audiowiedergabe stoppen
+            ["inputText", "outputText"].forEach(id => {
+            const el = document.getElementById(id);
+            const temp = document.createElement("div");
+            temp.innerHTML = el.innerHTML;
+            temp.querySelectorAll('.highlight').forEach(span => {
+                const textNode = document.createTextNode(span.textContent);
+                span.replaceWith(textNode);
+                });
+            temp.querySelectorAll('.info-icon').forEach(icon => {
+                icon.remove();
             });
-
-        // Alle Info-Icons entfernen
-        temp.querySelectorAll('.info-icon').forEach(icon => {
-            icon.remove();
+            el.innerHTML = temp.innerHTML;
         });
 
-        // Ergebnis zurück ins Textfeld schreiben
-        el.innerHTML = temp.innerHTML;
-    });
+        document.getElementById("explanationBox").style.display = "none";
+        document.getElementById("explanationBox").innerHTML = "";
+        
+        const saveWrapper = document.getElementById("saveVocabWrapper");
+        if (saveWrapper) saveWrapper.style.display = "none";
 
-    document.getElementById("explanationBox").style.display = "none";
-    document.getElementById("explanationBox").innerHTML = "";
-    
-    const saveWrapper = document.getElementById("saveVocabWrapper");
-    if (saveWrapper) saveWrapper.style.display = "none";
-
-    lastMatchedWord = null;
-    highlightIndexGlobal = 0;
-}
+        lastMatchedWord = null;
+        highlightIndexGlobal = 0;
+    }
 
 
-        function handleSelection(langFromBox) { // Parameter umbenannt, um Konflikt mit globalem lang zu vermeiden
+        function handleSelection(langFromBox) { 
+            stopCurrentAudioPlayback(); // Audiowiedergabe stoppen
             const selection = window.getSelection();
             const selectedText = selection.toString().trim();
             if (!selectedText || selectedText.includes(" ") || selectedText.length > 50 || selectedText.length < 1) return;
 
-            const currentInputText = document.getElementById("inputText").innerText; // Reinen Text holen
-            const currentOutputText = document.getElementById("outputText").innerText; // Reinen Text holen
-
-            // Wichtig: Stelle sicher, dass lastInputText und lastOutputText den reinen Text widerspiegeln
-            // der für die Übersetzung verwendet wurde, nicht den mit HTML-Markup von Highlights.
-            // handleInputTranslation sollte lastInputText und lastOutputText korrekt setzen.
-
+            const currentInputText = document.getElementById("inputText").innerText; 
+            const currentOutputText = document.getElementById("outputText").innerText; 
             const payload = {
                 sentence1: lastInputText, 
                 sentence2: lastOutputText, 
@@ -467,35 +477,24 @@
             }).then(res => res.json()).then(data => {
                 if (data.error) { console.error("Matching Error:", data.error); return; }
                 
-                
-
                 const color = highlightColorsGlobal[highlightIndexGlobal % highlightColorsGlobal.length];
                 highlightIndexGlobal++;
 
                 const applyHighlightsToBox = (boxId, words, isExplanationSource) => {
-                const box = document.getElementById(boxId);
-                if (!box || !words || words.length === 0) return;
-
-                // Arbeite mit bestehendem HTML-Inhalt, nicht mit reinem Text
-                let htmlContent = box.innerHTML;
-
-                words.forEach(wordToHighlight => {
-                const escapedWord = wordToHighlight.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); // Sonderzeichen escapen
-                const regex = new RegExp(`\\b(${escapedWord})(?![^<]*>|[^<>]*<\\/)`, "gi");
-
-                htmlContent = htmlContent.replace(regex, (match) => {
-                 // Doppelte Markierung verhindern – prüfe, ob match bereits markiert ist
-                const alreadyMarked = new RegExp(`<span class="highlight"[^>]*>${match}</span>`, "i").test(htmlContent);
-                if (alreadyMarked) return match;
-
-                // Markierung + Info-Icon einfügen
-            return `<span class="highlight" style="background-color:${color};">${match}</span><span class="info-icon" onclick="fetchExplanation(event, '${match.replace(/'/g, "\\'")}', '${boxId}')"> ℹ️</span>`;
-            });
-            });
-
-        box.innerHTML = htmlContent;
-            };
-
+                    const box = document.getElementById(boxId);
+                    if (!box || !words || words.length === 0) return;
+                    let htmlContent = box.innerHTML;
+                    words.forEach(wordToHighlight => {
+                        const escapedWord = wordToHighlight.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); 
+                        const regex = new RegExp(`\\b(${escapedWord})(?![^<]*>|[^<>]*<\\/)`, "gi");
+                        htmlContent = htmlContent.replace(regex, (match) => {
+                            const alreadyMarked = new RegExp(`<span class="highlight"[^>]*>${match}</span>`, "i").test(htmlContent);
+                            if (alreadyMarked) return match;
+                            return `<span class="highlight" style="background-color:${color};">${match}</span><span class="info-icon" onclick="fetchExplanation(event, '${match.replace(/'/g, "\\'")}', '${boxId}')"> ℹ️</span>`;
+                        });
+                    });
+                    box.innerHTML = htmlContent;
+                };
 
                 if (langFromBox === 'lang1') {
                     applyHighlightsToBox('inputText', data.originalMatches || [selectedText], true);
@@ -525,7 +524,8 @@
 
         function fetchExplanation(event, word, boxIdForSentence) {
             event.stopPropagation();
-            const sentence = document.getElementById(boxIdForSentence).innerText; // Reinen Text für Kontext nehmen
+            stopCurrentAudioPlayback(); // Audiowiedergabe stoppen
+            const sentence = document.getElementById(boxIdForSentence).innerText; 
             fetch("{{ url_for('explain') }}", {
                 method: "POST", headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ sentence: sentence, word: word })
@@ -539,95 +539,139 @@
             }).catch(err => { console.error("Explanation Error:", err); /* ... */ });
         }
 
-        // --- Dein restliches JavaScript für toggleRecording, speakInputText, speakOutputText, swapLanguagesAndText,
-        // --- generateLearningText, Tooltip, generateGapFromOutput, Lückentext Enter-Handler, saveVocabEntry
-        // --- hier einfügen und sicherstellen, dass die url_for() Aufrufe korrekt sind und
-        // --- Element-IDs mit dem neuen HTML übereinstimmen.
-        // --- playTTS in speakInputText und speakOutputText sollte den lang-Parameter korrekt übergeben.
-
-        // Minimalbeispiele für die restlichen Funktionen (du musst deinen Code einfügen):
         let isRecording = false; let mediaRecorder; let audioChunks = [];
         function toggleRecording() {
-        if (isRecording) {
-        mediaRecorder.stop();
-        document.getElementById("micBtn").classList.remove("active");
-        isRecording = false;
-        return;
+            stopCurrentAudioPlayback(); // Audiowiedergabe stoppen
+            if (isRecording) {
+                mediaRecorder.stop();
+                document.getElementById("micBtn").classList.remove("active");
+                isRecording = false;
+                return;
+            }
+            navigator.mediaDevices.getUserMedia({ audio: true })
+            .then(stream => {
+                audioChunks = [];
+                mediaRecorder = new MediaRecorder(stream);
+                mediaRecorder.start();
+                isRecording = true;
+                document.getElementById("micBtn").classList.add("active");
+                mediaRecorder.ondataavailable = e => { audioChunks.push(e.data); };
+                mediaRecorder.onstop = () => {
+                    const audioBlob = new Blob(audioChunks, { type: "audio/webm" });
+                    const formData = new FormData();
+                    formData.append("audio", audioBlob, "speech.webm");
+                    fetch("{{ url_for('transcribe_audio_route') }}", { // Sicherstellen, dass dieser Endpunkt existiert.
+                        method: "POST", body: formData
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        document.getElementById("micBtn").classList.remove("active");
+                        if (data.transcription) {
+                            document.getElementById("inputText").innerText = data.transcription;
+                            handleInputTranslation();
+                        } else { alert(data.error || "Transkription fehlgeschlagen."); }
+                    })
+                    .catch(err => {
+                        console.error("Fehler beim Senden der Audiodaten:", err);
+                        alert("Transkription fehlgeschlagen.");
+                        document.getElementById("micBtn").classList.remove("active");
+                    });
+                };
+            })
+            .catch(err => {
+                console.error("Zugriff auf Mikrofon verweigert:", err);
+                alert("Kein Zugriff auf Mikrofon.");
+            });
         }
 
-        navigator.mediaDevices.getUserMedia({ audio: true })
-        .then(stream => {
-            audioChunks = [];
-            mediaRecorder = new MediaRecorder(stream);
-            mediaRecorder.start();
-            isRecording = true;
-            document.getElementById("micBtn").classList.add("active");
+        function playTTS(text, lang, buttonElement) {
+            if (!text) return;
 
-            mediaRecorder.ondataavailable = e => {
-                audioChunks.push(e.data);
-            };
+            // Wenn derselbe Button geklickt wird und Audio spielt, stoppe es
+            if (activeSpeakerButton === buttonElement && currentAudio) {
+                stopCurrentAudioPlayback();
+                return;
+            }
+            
+            stopCurrentAudioPlayback(); // Stoppe jede andere laufende Wiedergabe
 
-            mediaRecorder.onstop = () => {
-                const audioBlob = new Blob(audioChunks, { type: "audio/webm" });
-                const formData = new FormData();
-                formData.append("audio", audioBlob, "speech.webm");
+            fetch("{{ url_for('tts') }}", { 
+                method: "POST", 
+                headers: {"Content-Type": "application/json"}, 
+                body: JSON.stringify({text, lang})
+            })
+            .then(r => {
+                if (!r.ok) throw new Error(`TTS request failed with status ${r.status}`);
+                return r.blob();
+            })
+            .then(blob => {
+                currentAudio = new Audio(URL.createObjectURL(blob));
+                activeSpeakerButton = buttonElement;
+                buttonElement.classList.add('active');
 
-                fetch("/transcribe-audio", {
-                    method: "POST",
-                    body: formData
-                })
-                .then(response => response.json())
-                .then(data => {
-                    document.getElementById("micBtn").classList.remove("active");
-                    if (data.transcription) {
-                        document.getElementById("inputText").innerText = data.transcription;
-                        handleInputTranslation();
-                    } else {
-                        alert(data.error || "Transkription fehlgeschlagen.");
+                currentAudio.onended = () => {
+                     // Nur zurücksetzen, wenn dies immer noch das aktive Audio ist
+                    if(activeSpeakerButton === buttonElement) {
+                        stopCurrentAudioPlayback();
                     }
-                })
-                .catch(err => {
-                    console.error("Fehler beim Senden der Audiodaten:", err);
-                    alert("Transkription fehlgeschlagen.");
-                    document.getElementById("micBtn").classList.remove("active");
+                };
+                currentAudio.onpause = () => { // Auch bei manueller Pause (sollte nicht passieren, aber sicher ist sicher)
+                     if(activeSpeakerButton === buttonElement) {
+                        stopCurrentAudioPlayback();
+                    }
+                };
+                currentAudio.play().catch(e => {
+                    console.error("Error playing TTS audio:", e);
+                    stopCurrentAudioPlayback(); // Aufräumen, wenn das Abspielen fehlschlägt
                 });
-            };
-        })
-        .catch(err => {
-            console.error("Zugriff auf Mikrofon verweigert:", err);
-            alert("Kein Zugriff auf Mikrofon.");
-        });
+            })
+            .catch(err => {
+                console.error("TTS Error:", err);
+                alert("Fehler bei der Sprachausgabe.");
+                stopCurrentAudioPlayback(); // Sicherstellen, dass der Zustand zurückgesetzt wird
+            });
         }
 
         function speakInputText() {
             const text = document.getElementById("inputText").innerText.trim();
             const lang = document.getElementById("sourceLang").value;
-            if (!text) return;
-            fetch("{{ url_for('transcribe_audio_route') }}", { method: "POST", headers: {"Content-Type": "application/json"}, body: JSON.stringify({text, lang})}).then(r => r.blob()).then(b => new Audio(URL.createObjectURL(b)).play());
+            const buttonElement = document.getElementById("inputSpeaker");
+            playTTS(text, lang, buttonElement);
         }
+
         function speakOutputText() {
             const text = document.getElementById("outputText").innerText.trim();
             const lang = document.getElementById("targetLang").value;
-            if (!text) return;
-            fetch("{{ url_for('tts') }}", { method: "POST", headers: {"Content-Type": "application/json"}, body: JSON.stringify({text, lang})}).then(r => r.blob()).then(b => new Audio(URL.createObjectURL(b)).play());
+            const buttonElement = document.getElementById("outputSpeaker");
+            playTTS(text, lang, buttonElement);
         }
+
         function swapLanguagesAndText() {
+            stopCurrentAudioPlayback(); // Audiowiedergabe stoppen
             const sourceSelect = document.getElementById("sourceLang"); const targetSelect = document.getElementById("targetLang");
             const tempLang = sourceSelect.value; sourceSelect.value = targetSelect.value; targetSelect.value = tempLang;
             const inputBox = document.getElementById("inputText"); const outputBox = document.getElementById("outputText");
             const tempText = inputBox.innerText; inputBox.innerText = outputBox.innerText; outputBox.innerText = tempText;
-            handleInputTranslation();
+            handleInputTranslation(); // Dies ruft auch stopCurrentAudioPlayback auf
         }
+
         function generateLearningText(difficulty) {
+            stopCurrentAudioPlayback(); // Audiowiedergabe stoppen
             const langCodeFull = document.getElementById("sourceLang").value;
-            const langCode = langCodeFull.split('-')[0]; // Nur 'de', 'en' etc.
+            const langCode = langCodeFull.split('-')[0]; 
             fetch("{{ url_for('generate_text_route') }}", { method: "POST", headers: {"Content-Type": "application/json"}, body: JSON.stringify({language: langCode, difficulty})})
             .then(r=>r.json()).then(d=> { if(d.text) {document.getElementById("inputText").innerText = d.text; handleInputTranslation();} else console.error(d.error);});
         }
+
         const tooltip = document.getElementById("generateTooltip"); const generateBtn = document.getElementById("generateDropdownBtn");
-        if(generateBtn && tooltip){ generateBtn.addEventListener("mouseenter", () => { tooltip.style.display = "block"; }); generateBtn.addEventListener("mouseleave", () => { setTimeout(() => { if (!tooltip.matches(':hover')) tooltip.style.display = "none"; }, 200); }); tooltip.addEventListener("mouseleave", () => { tooltip.style.display = "none"; }); }
+        if(generateBtn && tooltip){ 
+            generateBtn.addEventListener("mouseenter", () => { tooltip.style.display = "block"; }); 
+            generateBtn.addEventListener("mouseleave", () => { setTimeout(() => { if (!tooltip.matches(':hover')) tooltip.style.display = "none"; }, 200); }); 
+            tooltip.addEventListener("mouseleave", () => { tooltip.style.display = "none"; }); 
+        }
         
         function generateGapFromOutput() {
+            stopCurrentAudioPlayback(); // Audiowiedergabe stoppen
             const sentence = document.getElementById("outputText").innerText.trim();
             if (!sentence) return;
             fetch("{{ url_for('gap_fill') }}", {method: "POST", headers: {"Content-Type": "application/json"}, body: JSON.stringify({sentence})})
@@ -637,8 +681,10 @@
                 document.getElementById("outputText").innerHTML = html;
             });
         }
-        document.getElementById("outputText").addEventListener("keydown", function(event) { // Geändert auf outputText für Lückentext
+
+        document.getElementById("outputText").addEventListener("keydown", function(event) { 
             if (event.key === "Enter" && event.target.classList.contains("gap-input")) {
+                stopCurrentAudioPlayback(); // Audiowiedergabe stoppen
                 event.preventDefault(); const inputEl = event.target; const userAns = inputEl.value.trim();
                 const solution = inputEl.dataset.solution?.trim(); if(!solution) return;
                 const replacement = document.createElement('strong'); replacement.textContent = solution;
@@ -650,7 +696,9 @@
                 inputEl.parentNode.replaceChild(replacement, inputEl);
             }
         });
+
         function saveVocabEntry() {
+            stopCurrentAudioPlayback(); // Audiowiedergabe stoppen
             if (!lastMatchedWord || !lastMatchedWord.original_word || !lastMatchedWord.translated_word) { alert("Keine gültige Vokabel zum Speichern ausgewählt."); return; }
             fetch("{{ url_for('save_vocab_route') }}", {method: "POST", headers: {"Content-Type": "application/json"}, body: JSON.stringify(lastMatchedWord)})
             .then(r=>r.json()).then(d => {
@@ -659,8 +707,6 @@
                 document.getElementById("saveVocabWrapper").style.display = 'none'; lastMatchedWord = null;
             }).catch(e => alert("Netzwerkfehler."));
         }
-
-
     </script>
 </body>
 </html>
