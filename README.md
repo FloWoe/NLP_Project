@@ -19,7 +19,7 @@ Unser Ziel ist es, durch moderne Sprachverarbeitung, smarte Interaktionen und vi
 
 
 <div style="display: flex; justify-content: center; margin-top: 20px;">
-  <img src="images/Vokabeltrainer" alt="Vokabeltrainer Übersicht" width="820"/>
+  <img src="images/Vokabeltrainer.png" alt="Vokabeltrainer Übersicht" width="820"/>
 </div>
 
 <p style="text-align: center;"><em>Abb.1: Übersetzer des Vokabeltrainers.</em></p>
