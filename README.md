@@ -251,6 +251,31 @@ python tests/test_functional_flow.py
 
 📌 **Hinweis:** Stelle sicher, dass du dich im **Projekt-Hauptverzeichnis** befindest, wenn du die Tests ausführst – also dort, wo der `tests/`-Ordner liegt.
 
+## 📁 Projektstruktur
+
+```text
+.
+├── main.py                       # Einstiegspunkt der App
+├── spacy_install.py             # Initiale NLP-Installation
+├── requirements.txt             # Abhängigkeiten
+├── .gitignore
+
+├── Backend/                     # Flask-API-Logik & Routing
+├── configuration/              # Konfigurationsdateien und API-Keys
+├── Database/                   # Datenbankmodelle & Schnittstellen
+├── generate_text/              # Text- & Beispielsatzgenerator
+├── images/                     # Screenshots & UI-Bilder
+├── learning/                   # Lernlogik & Karteikartensystem
+├── speech_module/              # ElevenLabs- und Whisper-Anbindung
+├── static/                     # CSS, JS, Icons
+├── templates/                  # HTML-Frontend
+├── tests/                      # Unit-Tests
+├── Translation/                # Google Translation API Wrapper
+├── vocab_quiz/                 # Vokabelquiz & Logik
+├── vocab_storage/              # Speichern & Abrufen von Vokabeln
+├── word_explain/               # Worterklärungen & Kontexte
+├── word_finding/               # Wortabgleich & Matching-Logik
+
 
 
 
