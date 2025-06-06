@@ -8,6 +8,7 @@
 ![ElevenLabs](https://img.shields.io/badge/-ELEVENLABS-black?style=for-the-badge&logo=audio&logoColor=white)
 ![Whisper](https://img.shields.io/badge/-WHISPER-00A67E?style=for-the-badge&logo=openai&logoColor=white)
 ![Google Cloud Translation](https://img.shields.io/badge/-GOOGLE%20TRANSLATION-34A853?style=for-the-badge&logo=google&logoColor=white)
+![SQLite](https://img.shields.io/badge/-SQLite-003B57?style=for-the-badge&logo=sqlite&logoColor=white)
 
 
 ## Beschreibung des Projektes
