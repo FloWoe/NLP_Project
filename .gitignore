@@ -1,6 +1,29 @@
-# API Keys
-configuration/config.env
-.env
-.venv
+# === Python Build Files ===
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
 
+# === Lokale Datenbanken und temporäre Daten ===
+*.db
+Database/vocab.db
+
+# === Audio-Ausgaben ===
+*.mp3
 Backend/output.mp3
+
+# === Umgebungsvariablen und API-Keys ===
+# *.env
+#configuration/config.env
+
+# === Editor-spezifische Dateien ===
+.vscode/
+.idea/
+
+# === Betriebssystem-Dateien ===
+.DS_Store
+Thumbs.db
+
+# === Virtuelle Umgebungen (falls verwendet) ===
+env/
+venv/

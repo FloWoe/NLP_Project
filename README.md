@@ -6,16 +6,25 @@
 
 ## 📝 Projektidee
 
-Unsere Anwendung soll beim Vokabellernen unterstützen. Nutzer*innen können z. B. Songtexte oder andere Texte in ein Eingabefeld einfügen. Der Text wird auf Wunsch automatisch übersetzt.
+Unser Vokabeltrainer ist eine webbasierte Anwendung, die eine intelligente und personalisierte Umgebung zum Sprachenlernen bietet. Nach dem Login erhalten Nutzer:innen Zugriff auf eine individuell angepasste Lernplattform, in der sie eigene Texte eingeben und automatisch übersetzen lassen können.
 
-Ein zentrales Feature ist die Möglichkeit, Wörter im Originaltext farblich zu markieren – diese Markierungen werden automatisch auch in der Übersetzung übernommen. Dadurch können gezielt neue Vokabeln im Kontext gelernt werden. Des weiteren soll bei den Markierungen Wörter erklärt werdne hinsichtlich der Herkunft, Bedeutung im Satz, Wortart und in einem anderen Kontext überführt werden als Beispiel. Dadurch soll dem Lernen ermöglicht werden effizient neue Wörter zu lernen und sie einprägsamer zu machen, da andere Kontextbeispiele für das Wort aufgezeigt werden.
+Besonders hervorzuheben ist die Möglichkeit, einzelne Wörter im Text zu markieren, die das zugehörige Wort in der Übersetzung hervorheben. Diese werden nicht nur farblich hervorgehoben – wobei jede neue Markierung eine eigene Farbe erhält –, sondern auch automatisch an allen Stellen im Text erkannt und ebenfalls markiert. Die Anwendung erkennt dabei nicht nur Einzelwörter, sondern auch zusammenhängende Wortgruppen, die inhaltlich gemeinsam übersetzt werden. Innerhalb des Übersetzers gibt es zusätzlich die Möglichkeit über
+STT mit Whisper Sprachaufnahmen sich transkripieren zu lassen. Zuletzt kann man durch die integrierte ElevenLabs API (TTS) sich Texte und Vokablen vorlesen lassen, um gezielt die Aussprache zu üben und zu verbessern.
 
-<div style="display: flex; justify-content: center; gap: 20px;">
-  <img src="images/Idee.png" alt="Screenshot 1" width="400"/>
-  <img src="images/explain.jpg" alt="Screenshot 2" width="400"/>
+Ein zentrales Element des Vokabeltrainers ist die Verbindung von Übersetzung und Sprachverständnis: Beim Überfahren eines markierten Wortes mit der Maus werden Definitionen, Beispielsätze oder weiterführende Informationen angezeigt. Markierte Wörter können dauerhaft gespeichert werden und landen in einer persönlichen Vokabelliste, die über eine Fuzzy-Suche schnell und fehlertolerant durchsuchbar ist.
+
+Auf Basis dieser gespeicherten Vokabeln lassen sich individuell angepasste Vokabeltests generieren. Zusätzlich bietet die Anwendung einen Lernmodus mit Karteikartenfunktion, in dem Nutzer:innen gezielt trainieren können. Unterstützt wird dies durch ein zentrales Dashboard, das eine Übersicht über gespeicherte Vokabeln, Testergebnisse und den persönlichen Lernfortschritt liefert.
+
+Unser Ziel ist es, durch moderne Sprachverarbeitung, smarte Interaktionen und visuelles Feedback eine motivierende und nachhaltige Vokabellern-Erfahrung zu schaffen.
+
+
+<div style="display: flex; justify-content: center; margin-top: 20px;">
+  <img src="images/Vokabeltrainer" alt="Vokabeltrainer Übersicht" width="820"/>
 </div>
 
-<p style="text-align: center;"><em>Abb.1: Beispielhafte Umsetzung unseres Vokabeltrainers.</em></p>
+<p style="text-align: center;"><em>Abb.1: Übersetzer des Vokabeltrainers.</em></p>
+
+
 
 
 
@@ -109,10 +118,116 @@ Whisper benötigt [ffmpeg](https://ffmpeg.org/), um Audio korrekt zu verarbeiten
    ffmpeg -version
    ```
 
-### 5. API Key erstellen
 
-API Keys müssen für Google Translation Cloud, Elevenlabs API und Gemini erstellt werden
-Passe diese example.env an und benenne sie zu config.env um. Füge dann die API Keys ein.
+### 🔐 5. API Keys erstellen (ausführlich)
+
+Für den Betrieb der Anwendung benötigst du **vier API-Keys**:
+
+| Dienst                    | Benötigter Key              | Beschreibung                                   |
+|--------------------------|-----------------------------|------------------------------------------------|
+| Google Cloud Translation | `GOOGLE_TRANSLATE_API_KEY`  | Für Textübersetzungen                         |
+| Google Gemini            | `GEMINI_API_KEY`            | Für Kontextvergleiche mit dem Gemini-Modell   |
+| Google Cloud TTS         | `GOOGLE_TTS_API_KEY`        | (Optional) Für Googles Text-to-Speech         |
+| ElevenLabs               | `ELEVENLABS_API_KEY`        | Für hochwertige Sprachsynthese (TTS)          |
+
+---
+
+#### 🌐 5.1 Google Cloud Translation API
+
+**Benötigter Key:** `GOOGLE_TRANSLATE_API_KEY`
+
+**Schritte:**
+
+1. Gehe zu:  
+   👉 https://console.cloud.google.com/
+2. Melde dich mit deinem Google-Konto an.
+3. Erstelle ein neues Projekt oder wähle ein bestehendes aus.
+4. Klicke links auf **„APIs & Dienste“ > „Bibliothek“**.
+5. Suche nach **„Cloud Translation API“** und aktiviere sie.
+6. Gehe dann auf **„APIs & Dienste“ > „Anmeldedaten“**.
+7. Klicke auf **„Anmeldedaten erstellen“ > „API-Schlüssel“**.
+8. Kopiere den generierten Key.
+
+→ Trage diesen Key in deine `.env`-Datei ein als:
+```env
+GOOGLE_TRANSLATE_API_KEY=dein_api_schlüssel
+```
+
+---
+
+#### 🌟 5.2 Google Gemini (generativeai)
+
+**Benötigter Key:** `GEMINI_API_KEY`
+
+**Schritte:**
+
+1. Gehe zu:  
+   👉 https://makersuite.google.com/app/apikey
+2. Melde dich mit deinem Google-Konto an.
+3. Erstelle ggf. ein Projekt.
+4. Ein API-Key wird direkt angezeigt. Kopiere ihn.
+
+→ Trage ihn in deine `.env`-Datei ein:
+```env
+GEMINI_API_KEY=dein_gemini_api_key
+```
+
+---
+
+#### 🗣️ 5.3 Google Cloud TTS API (optional)
+
+**Benötigter Key:** `GOOGLE_TTS_API_KEY`
+
+**Schritte (ähnlich wie bei Translation):**
+
+1. Gehe zu:  
+   👉 https://console.cloud.google.com/
+2. Wähle dein Projekt aus.
+3. Aktiviere über die **API-Bibliothek** die **Text-to-Speech API**.
+4. Erstelle über **„Anmeldedaten“ > „API-Schlüssel“** einen neuen Key.
+5. Kopiere den Key.
+
+→ Trage ihn in deine `.env`-Datei ein:
+```env
+GOOGLE_TTS_API_KEY=dein_google_tts_key
+```
+
+---
+
+#### 🧠 5.4 ElevenLabs API
+
+**Benötigter Key:** `ELEVENLABS_API_KEY`
+
+**Schritte:**
+
+1. Gehe zu:  
+   👉 https://www.elevenlabs.io/
+2. Erstelle ein kostenloses Konto.
+3. Klicke oben rechts auf dein Profil > **„Profile“**.
+4. Gehe zu **„API Keys“**.
+5. Klicke auf **„Create API Key“**, gib ihm einen Namen und kopiere ihn.
+
+→ Trage ihn in deine `.env`-Datei ein:
+```env
+ELEVENLABS_API_KEY=dein_elevenlabs_key
+```
+
+---
+
+#### ✅ Beispiel für deine `.env`-Datei
+
+```env
+GOOGLE_TRANSLATE_API_KEY=abc123...
+GEMINI_API_KEY=xyz456...
+GOOGLE_TTS_API_KEY=tts789...
+ELEVENLABS_API_KEY=elv111...
+```
+
+Speichere die Datei unter:
+```
+configuration/config.env
+```
+
 ### 6. Anwendung starten
 ```bash
 python main.py
@@ -123,6 +238,38 @@ python main.py
 [http://127.0.0.1:5000](http://127.0.0.1:5000)
 
 ---
+
+
+### 🧪 Unittests ausführen
+
+Du kannst Unittests nutzen, um sicherzustellen, dass deine Module wie erwartet funktionieren.
+
+#### ✅ Alle Tests im Projekt ausführen
+
+```bash
+python -m unittest discover tests
+```
+
+> Führt alle Tests im `tests/`-Ordner aus.
+
+---
+
+#### 📄 Einzelne Testdateien ausführen
+
+##### 🔍 Nur `test_alignment.py` ausführen:
+
+```bash
+python tests/test_alignment.py
+```
+
+##### 🔍 Nur `test_functional_flow.py` ausführen:
+
+```bash
+python tests/test_functional_flow.py
+```
+
+📌 **Hinweis:** Stelle sicher, dass du dich im **Projekt-Hauptverzeichnis** befindest, wenn du die Tests ausführst – also dort, wo der `tests/`-Ordner liegt.
+
 
 
 
