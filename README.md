@@ -1,5 +1,14 @@
 # NLP Project
 # 📚 Vokabeltrainer mit Textmarkierung
+## 🛠️ Build with
+
+![Python](https://img.shields.io/badge/-PYTHON-3776AB?style=for-the-badge&logo=python&logoColor=white)
+![Gemini](https://img.shields.io/badge/-GEMINI-4285F4?style=for-the-badge&logo=google&logoColor=white)
+![CSS](https://img.shields.io/badge/-CSS3-1572B6?style=for-the-badge&logo=css3&logoColor=white)
+![HTML](https://img.shields.io/badge/-HTML5-E34F26?style=for-the-badge&logo=html5&logoColor=white)
+![ElevenLabs](https://img.shields.io/badge/-ELEVENLABS-black?style=for-the-badge&logo=audio&logoColor=white)
+![Whisper](https://img.shields.io/badge/-WHISPER-00A67E?style=for-the-badge&logo=openai&logoColor=white)
+
 
 ## Beschreibung des Projektes
 
