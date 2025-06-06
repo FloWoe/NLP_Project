@@ -7,5 +7,4 @@ load_dotenv(dotenv_path="configuration/config.env")
 
 GOOGLE_TRANSLATE_API_KEY = os.getenv("GOOGLE_TRANSLATE_API_KEY")
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
-GOOGLE_TTS_API_KEY = os.getenv("GOOGLE_TTS_API_KEY")
 ELEVENLABS_API_KEY = os.getenv("ELEVENLABS_API_KEY")

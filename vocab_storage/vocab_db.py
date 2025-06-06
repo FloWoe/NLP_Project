@@ -8,6 +8,10 @@ from werkzeug.security import generate_password_hash, check_password_hash
 import os
 import random
 from datetime import datetime, timedelta # Für Lernfortschritt (next_review_due)
+import spacy
+
+
+
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 DB_PATH = os.path.join(BASE_DIR, '..', 'Database', 'vocab.db')
@@ -21,6 +25,35 @@ class VocabEntry:
     target_lang: str
     original_sentence: str
     translated_sentence: str
+    
+import spacy
+
+# Sprachmodelle laden (nur einmal beim Import)
+nlp_en = spacy.load("en_core_web_sm")
+nlp_de = spacy.load("de_core_news_sm")
+nlp_fr = spacy.load("fr_core_news_sm")
+nlp_es = spacy.load("es_core_news_sm")
+nlp_ja = spacy.load("ja_core_news_sm")
+
+def lemmatize(text: str, lang: str) -> str:
+    if not text:
+        return text
+
+    if lang.startswith("en"):
+        doc = nlp_en(text)
+    elif lang.startswith("de"):
+        doc = nlp_de(text)
+    elif lang.startswith("fr"):
+        doc = nlp_fr(text)
+    elif lang.startswith("es"):
+        doc = nlp_es(text)
+    elif lang.startswith("ja"):
+        doc = nlp_ja(text)
+    else:
+        return text  
+
+    return " ".join([token.lemma_ for token in doc])
+
 
 # --- Initialisierungsfunktionen ---
 def init_user_table():
@@ -158,6 +191,10 @@ def get_user_by_id(user_id):
 
 # --- Vokabel Management Funktionen ---
 def save_vocab(user_id: int, entry: VocabEntry):
+    # Wörter lemmatisieren, um sie in Grundform zu speichern
+    original_lemma = lemmatize(entry.original_word, entry.source_lang)
+    translated_lemma = lemmatize(entry.translated_word, entry.target_lang)
+
     conn = sqlite3.connect(DB_PATH)
     cursor = conn.cursor()
     cursor.execute("""
@@ -167,12 +204,14 @@ def save_vocab(user_id: int, entry: VocabEntry):
             original_sentence, translated_sentence
         ) VALUES (?, ?, ?, ?, ?, ?, ?)
     """, (
-        user_id, entry.original_word, entry.translated_word,
+        user_id, original_lemma, translated_lemma,
         entry.source_lang, entry.target_lang,
         entry.original_sentence, entry.translated_sentence
     ))
     conn.commit()
     conn.close()
+
+
 
 def get_vocab_by_target_lang(user_id: int, lang_code: str):
     conn = sqlite3.connect(DB_PATH)
@@ -248,7 +287,8 @@ def search_vocab_advanced(user_id: int, query: str, top_k=15):
     conn = sqlite3.connect(DB_PATH)
     cursor = conn.cursor()
     cursor.execute("""
-        SELECT id, original_word, translated_word, original_sentence, translated_sentence
+        SELECT id, original_word, translated_word, original_sentence, translated_sentence,
+               source_lang, target_lang
         FROM vocabulary
         WHERE user_id = ?
     """, (user_id,))
@@ -256,42 +296,32 @@ def search_vocab_advanced(user_id: int, query: str, top_k=15):
     conn.close()
 
     results = []
-    for row_tuple in rows: # row ist hier ein Tupel (id, original_word, ...)
-        original_word = row_tuple[1].lower() if row_tuple[1] else ""
-        translated_word = row_tuple[2].lower() if row_tuple[2] else ""
+    for row in rows:
+        original_word = row[1].lower() if row[1] else ""
+        translated_word = row[2].lower() if row[2] else ""
 
         lev_dist_orig = Levenshtein.distance(query_lower, original_word)
         lev_dist_trans = Levenshtein.distance(query_lower, translated_word)
         lev_dist = min(lev_dist_orig, lev_dist_trans)
 
-        len_q = len(query_lower)
-        len_ow = len(original_word)
-        len_tw = len(translated_word)
-
-        # Wähle die Länge des Wortes, das die geringste Distanz hatte, oder die Query-Länge
-        # Dies ist eine mögliche Normalisierungsstrategie. Es gibt viele.
-        # Hier verwenden wir die maximale Länge der verglichenen Strings, um zu normalisieren.
-        # Eine andere Möglichkeit ist, die Länge des DB-Wortes zu nehmen, das näher dran war.
-        relevant_len = len_ow if lev_dist_orig <= lev_dist_trans else len_tw
-        max_len_for_norm = max(len_q, relevant_len)
-
-        if max_len_for_norm == 0:
-            similarity_score = 1.0 if lev_dist == 0 else 0.0 # Beide Strings leer und Query leer
-        else:
-            similarity_score = 1 - (lev_dist / max_len_for_norm)
+        relevant_len = max(len(query_lower), len(original_word) if lev_dist_orig <= lev_dist_trans else len(translated_word))
+        similarity_score = 1 - (lev_dist / relevant_len) if relevant_len > 0 else (1.0 if lev_dist == 0 else 0.0)
 
         if similarity_score >= 0.6:
-            results.append((similarity_score, row_tuple))
+            results.append((similarity_score, row))
 
     best = sorted(results, key=lambda x: x[0], reverse=True)[:top_k]
 
     return [dict(
-        id=r_tuple[1][0], # Das ist r_tuple[1] (das ist row_tuple) und dessen erstes Element (id)
-        original_word=r_tuple[1][1],
-        translated_word=r_tuple[1][2],
-        original_sentence=r_tuple[1][3] if r_tuple[1][3] else "",
-        translated_sentence=r_tuple[1][4] if r_tuple[1][4] else ""
-    ) for r_tuple in best]
+        id=row[0],
+        original_word=row[1],
+        translated_word=row[2],
+        original_sentence=row[3] or "",
+        translated_sentence=row[4] or "",
+        source_lang=row[5] or "N/A",
+        target_lang=row[6] or "N/A"
+    ) for _, row in best]
+
 
 
 def get_vocab_for_quiz(user_id: int, limit: int = 10):

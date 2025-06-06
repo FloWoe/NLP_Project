@@ -4,12 +4,11 @@
 ## Beschreibung des Projektes
 
 
-## 📝 Projektidee
+### 📝 Projektidee
 
 Unser Vokabeltrainer ist eine webbasierte Anwendung, die eine intelligente und personalisierte Umgebung zum Sprachenlernen bietet. Nach dem Login erhalten Nutzer:innen Zugriff auf eine individuell angepasste Lernplattform, in der sie eigene Texte eingeben und automatisch übersetzen lassen können.
 
-Besonders hervorzuheben ist die Möglichkeit, einzelne Wörter im Text zu markieren, die das zugehörige Wort in der Übersetzung hervorheben. Diese werden nicht nur farblich hervorgehoben – wobei jede neue Markierung eine eigene Farbe erhält –, sondern auch automatisch an allen Stellen im Text erkannt und ebenfalls markiert. Die Anwendung erkennt dabei nicht nur Einzelwörter, sondern auch zusammenhängende Wortgruppen, die inhaltlich gemeinsam übersetzt werden. Innerhalb des Übersetzers gibt es zusätzlich die Möglichkeit über
-STT mit Whisper Sprachaufnahmen sich transkripieren zu lassen. Zuletzt kann man durch die integrierte ElevenLabs API (TTS) sich Texte und Vokablen vorlesen lassen, um gezielt die Aussprache zu üben und zu verbessern.
+Besonders hervorzuheben ist unser Übersetzer. Er bietet die Möglichkeit, einzelne Wörter im Text zu markieren, die das zugehörige Wort in der Übersetzung hervorheben. Diese werden nicht nur farblich hervorgehoben – wobei jede neue Markierung eine eigene Farbe erhält –, sondern auch automatisch an allen Stellen im Text erkannt und ebenfalls markiert. Die Anwendung erkennt dabei nicht nur Einzelwörter, sondern auch zusammenhängende Wortgruppen, die inhaltlich gemeinsam übersetzt werden. Man kann sich auch selber im Übersetze Texte gezielt nach Schwierigkeit generieren lassen zum Üben der Sprache und sich auch Lücken generieren, um Wörter und Sprachverständnis zu üben. Innerhalb des Übersetzers gibt es zusätzlich die Möglichkeit überSTT mit Whisper Sprachaufnahmen sich transkripieren zu lassen. Zuletzt kann man durch die integrierte ElevenLabs API (TTS) sich Texte und Vokablen vorlesen lassen, um gezielt die Aussprache zu üben und zu verbessern.
 
 Ein zentrales Element des Vokabeltrainers ist die Verbindung von Übersetzung und Sprachverständnis: Beim Überfahren eines markierten Wortes mit der Maus werden Definitionen, Beispielsätze oder weiterführende Informationen angezeigt. Markierte Wörter können dauerhaft gespeichert werden und landen in einer persönlichen Vokabelliste, die über eine Fuzzy-Suche schnell und fehlertolerant durchsuchbar ist.
 
@@ -26,14 +25,11 @@ Unser Ziel ist es, durch moderne Sprachverarbeitung, smarte Interaktionen und vi
 
 
 
-
-
-
 💡 Die Anwendung hat einen hohen Praxisbezug, erfordert allerdings einiges an Frontend-Arbeit.
 
 ---
 
-## 👥 Gruppenmitglieder
+### 👥 Gruppenmitglieder
 
 - Maxi Zvada  
 - Lukas Ihrig  
@@ -43,27 +39,27 @@ Unser Ziel ist es, durch moderne Sprachverarbeitung, smarte Interaktionen und vi
 
 ---
 
-## Anforderungen an die Anwendung
+### Anforderungen an die Anwendung
 
-### Benutzerfunktionen
+#### Benutzerfunktionen
 
 - User kann sich einloggen und hat eine personalisierte Anwendung
 
-### Übersetzungsfunktionen
+#### Übersetzungsfunktionen
 
 - Text kann eingegeben werden und wird automatisch übersetzt
 
-### Markierung von Wörtern
+#### Markierung von Wörtern
 
 - Einzelne Wörter können markiert werden und werden dann farbig hinterlegt  
   _Hinweis_: Die Farbe soll unterschiedlich sein, wenn bereits ein Wort in einem Text markiert wurde – beim nächsten Wort soll eine andere Farbe verwendet werden.
 - Das markierte Wort soll automatisch in allen Vorkommen des Textes markiert werden
 
-### Übersetzungslogik
+#### Übersetzungslogik
 
 - Sollten mehrere Worte zu einer Übersetzung gehören, sollen diese alle gefunden werden und entsprechend markiert werden
 
-### Zusatzfunktionen
+#### Zusatzfunktionen
 
 - Mouseover über ein Wort soll es möglich machen, Definitionen oder Beispielsätze o.Ä. anzuzeigen
 
@@ -170,26 +166,6 @@ GOOGLE_TRANSLATE_API_KEY=dein_api_schlüssel
 → Trage ihn in deine `.env`-Datei ein:
 ```env
 GEMINI_API_KEY=dein_gemini_api_key
-```
-
----
-
-#### 🗣️ 5.3 Google Cloud TTS API (optional)
-
-**Benötigter Key:** `GOOGLE_TTS_API_KEY`
-
-**Schritte (ähnlich wie bei Translation):**
-
-1. Gehe zu:  
-   👉 https://console.cloud.google.com/
-2. Wähle dein Projekt aus.
-3. Aktiviere über die **API-Bibliothek** die **Text-to-Speech API**.
-4. Erstelle über **„Anmeldedaten“ > „API-Schlüssel“** einen neuen Key.
-5. Kopiere den Key.
-
-→ Trage ihn in deine `.env`-Datei ein:
-```env
-GOOGLE_TTS_API_KEY=dein_google_tts_key
 ```
 
 ---
