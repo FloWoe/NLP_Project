@@ -251,6 +251,8 @@ python tests/test_functional_flow.py
 
 📌 **Hinweis:** Stelle sicher, dass du dich im **Projekt-Hauptverzeichnis** befindest, wenn du die Tests ausführst – also dort, wo der `tests/`-Ordner liegt.
 
+---
+
 ## 📁 Projektstruktur
 
 ```text
