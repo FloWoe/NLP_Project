@@ -23,10 +23,6 @@ Unser Ziel ist es, durch moderne Sprachverarbeitung, smarte Interaktionen und vi
 
 <p style="text-align: center;"><em>Abb.1: Übersetzer des Vokabeltrainers.</em></p>
 
-
-
-💡 Die Anwendung hat einen hohen Praxisbezug, erfordert allerdings einiges an Frontend-Arbeit.
-
 ---
 
 ### 👥 Gruppenmitglieder
@@ -170,7 +166,7 @@ GEMINI_API_KEY=dein_gemini_api_key
 
 ---
 
-#### 🧠 5.4 ElevenLabs API
+#### 🧠 5.3 ElevenLabs API
 
 **Benötigter Key:** `ELEVENLABS_API_KEY`
 
@@ -195,7 +191,6 @@ ELEVENLABS_API_KEY=dein_elevenlabs_key
 ```env
 GOOGLE_TRANSLATE_API_KEY=abc123...
 GEMINI_API_KEY=xyz456...
-GOOGLE_TTS_API_KEY=tts789...
 ELEVENLABS_API_KEY=elv111...
 ```
 
