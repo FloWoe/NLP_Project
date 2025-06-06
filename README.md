@@ -8,6 +8,7 @@
 ![HTML](https://img.shields.io/badge/-HTML5-E34F26?style=for-the-badge&logo=html5&logoColor=white)
 ![ElevenLabs](https://img.shields.io/badge/-ELEVENLABS-black?style=for-the-badge&logo=audio&logoColor=white)
 ![Whisper](https://img.shields.io/badge/-WHISPER-00A67E?style=for-the-badge&logo=openai&logoColor=white)
+![Google Cloud Translation](https://img.shields.io/badge/-GOOGLE%20TRANSLATION-34A853?style=for-the-badge&logo=google&logoColor=white)
 
 
 ## Beschreibung des Projektes
