@@ -130,7 +130,6 @@ Für den Betrieb der Anwendung benötigst du **vier API-Keys**:
 |--------------------------|-----------------------------|------------------------------------------------|
 | Google Cloud Translation | `GOOGLE_TRANSLATE_API_KEY`  | Für Textübersetzungen                         |
 | Google Gemini            | `GEMINI_API_KEY`            | Für Kontextvergleiche mit dem Gemini-Modell   |
-| Google Cloud TTS         | `GOOGLE_TTS_API_KEY`        | (Optional) Für Googles Text-to-Speech         |
 | ElevenLabs               | `ELEVENLABS_API_KEY`        | Für hochwertige Sprachsynthese (TTS)          |
 
 ---
