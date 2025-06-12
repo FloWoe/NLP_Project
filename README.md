@@ -1,5 +1,16 @@
-# NLP Project
-# 📚 Vokabeltrainer mit Textmarkierung
+# NLP Project: 📚 Vokabeltrainer mit Textmarkierung
+## 🛠️ Build with
+
+![Python](https://img.shields.io/badge/-PYTHON-3776AB?style=for-the-badge&logo=python&logoColor=white)
+![Gemini](https://img.shields.io/badge/-GEMINI-4285F4?style=for-the-badge&logo=google&logoColor=white)
+![CSS](https://img.shields.io/badge/-CSS3-1572B6?style=for-the-badge&logo=css3&logoColor=white)
+![HTML](https://img.shields.io/badge/-HTML5-E34F26?style=for-the-badge&logo=html5&logoColor=white)
+![ElevenLabs](https://img.shields.io/badge/-ELEVENLABS-black?style=for-the-badge&logo=audio&logoColor=white)
+![Whisper](https://img.shields.io/badge/-WHISPER-00A67E?style=for-the-badge&logo=openai&logoColor=white)
+![Google Cloud Translation](https://img.shields.io/badge/-GOOGLE%20TRANSLATION-34A853?style=for-the-badge&logo=google&logoColor=white)
+![SQLite](https://img.shields.io/badge/-SQLite-003B57?style=for-the-badge&logo=sqlite&logoColor=white)
+
+
 
 ## Beschreibung des Projektes
 
@@ -22,10 +33,6 @@ Unser Ziel ist es, durch moderne Sprachverarbeitung, smarte Interaktionen und vi
 </div>
 
 <p style="text-align: center;"><em>Abb.1: Übersetzer des Vokabeltrainers.</em></p>
-
-
-
-💡 Die Anwendung hat einen hohen Praxisbezug, erfordert allerdings einiges an Frontend-Arbeit.
 
 ---
 
@@ -123,7 +130,6 @@ Für den Betrieb der Anwendung benötigst du **vier API-Keys**:
 |--------------------------|-----------------------------|------------------------------------------------|
 | Google Cloud Translation | `GOOGLE_TRANSLATE_API_KEY`  | Für Textübersetzungen                         |
 | Google Gemini            | `GEMINI_API_KEY`            | Für Kontextvergleiche mit dem Gemini-Modell   |
-| Google Cloud TTS         | `GOOGLE_TTS_API_KEY`        | (Optional) Für Googles Text-to-Speech         |
 | ElevenLabs               | `ELEVENLABS_API_KEY`        | Für hochwertige Sprachsynthese (TTS)          |
 
 ---
@@ -170,7 +176,7 @@ GEMINI_API_KEY=dein_gemini_api_key
 
 ---
 
-#### 🧠 5.4 ElevenLabs API
+#### 🧠 5.3 ElevenLabs API
 
 **Benötigter Key:** `ELEVENLABS_API_KEY`
 
@@ -195,7 +201,6 @@ ELEVENLABS_API_KEY=dein_elevenlabs_key
 ```env
 GOOGLE_TRANSLATE_API_KEY=abc123...
 GEMINI_API_KEY=xyz456...
-GOOGLE_TTS_API_KEY=tts789...
 ELEVENLABS_API_KEY=elv111...
 ```
 
@@ -245,6 +250,33 @@ python tests/test_functional_flow.py
 ```
 
 📌 **Hinweis:** Stelle sicher, dass du dich im **Projekt-Hauptverzeichnis** befindest, wenn du die Tests ausführst – also dort, wo der `tests/`-Ordner liegt.
+
+---
+
+## 📁 Projektstruktur
+
+```text
+.
+├── main.py                       # Einstiegspunkt der App
+├── spacy_install.py             # Initiale NLP-Installation
+├── requirements.txt             # Abhängigkeiten
+├── .gitignore
+
+├── Backend/                     # Flask-API-Logik & Routing
+├── configuration/              # Konfigurationsdateien und API-Keys
+├── Database/                   # Datenbankmodelle & Schnittstellen
+├── generate_text/              # Text- & Beispielsatzgenerator
+├── images/                     # Screenshots & UI-Bilder
+├── learning/                   # Lernlogik & Karteikartensystem
+├── speech_module/              # ElevenLabs- und Whisper-Anbindung
+├── static/                     # CSS, JS, Icons
+├── templates/                  # HTML-Frontend
+├── tests/                      # Unit-Tests
+├── Translation/                # Google Translation API Wrapper
+├── vocab_quiz/                 # Vokabelquiz & Logik
+├── vocab_storage/              # Speichern & Abrufen von Vokabeln
+├── word_explain/               # Worterklärungen & Kontexte
+├── word_finding/               # Wortabgleich & Matching-Logik
 
 
 
