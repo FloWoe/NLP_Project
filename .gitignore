@@ -13,8 +13,8 @@ Database/vocab.db
 Backend/output.mp3
 
 # === Umgebungsvariablen und API-Keys ===
-# *.env
-#configuration/config.env
+*.env
+configuration/config.env
 
 # === Editor-spezifische Dateien ===
 .vscode/
